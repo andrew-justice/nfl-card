@@ -482,7 +482,7 @@ def fetch_odds():
             log(f"  odds: using saved prices from {age_h:.1f} hours ago")
             return saved, 'saved'
         if not key:
-            log("  odds: no key (add nfl-odds-key.txt for live prices from several books; see README)")
+            log("  odds: no key (add nfl-odds-key.txt, or the ODDS_API_KEY secret on GitHub, for live prices; see README)")
             return None, 'no key'
         return None, 'offline'
     if saved and age_h is not None and age_h * 60 < ODDS_REUSE_MIN:
@@ -503,7 +503,8 @@ def fetch_odds():
         log(f"  odds: {len(events)} games from The Odds API; {left if left is not None else '?'} credits left this month")
         return saved, 'live'
     except urllib.error.HTTPError as e:
-        why = {401: 'key rejected: check nfl-odds-key.txt', 429: 'out of credits or too many requests'}.get(e.code, f'HTTP {e.code}')
+        why = {401: 'key rejected: check the key (nfl-odds-key.txt, or the ODDS_API_KEY secret on GitHub)',
+               429: 'out of credits or too many requests'}.get(e.code, f'HTTP {e.code}')
     except Exception as e:
         why = f'unreachable ({e})'
     if saved and age_h is not None and age_h < ODDS_MAX_AGE_H:

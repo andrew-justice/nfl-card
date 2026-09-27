@@ -360,7 +360,7 @@ function valueSpots(games){const out=[];const books=myBooks();
   return out.sort((a,b)=>b.o.ev-a.o.ev).slice(0,12)}
 function pricesHtml(rows){const gs=rows.map(r=>r.g).filter(g=>!g.final);if(!gs.length)return '';
   if(!gs.some(g=>g.odds)){if(OM)return '';const why=DATA.odds_note&&!['no key','offline'].includes(DATA.odds_note)&&DATA.odds_note.indexOf('skipped')<0?' This build could not get prices: '+DATA.odds_note+'.':'';
-    return '<h3>Prices at your books</h3><p class="muted note">Built on your phone with a free odds key, the card shows the best price for every bet across your sportsbooks here and flags any that beat the fair price. See "Live odds" in the README.'+why+'</p>'}
+    return '<h3>Prices at your books</h3><p class="muted note">With a free odds key, the card shows the best price for every bet across your sportsbooks here and flags any that beat the fair price. See "Live odds" in the README.'+why+'</p>'}
   const mine=myBooks();const spots=valueSpots(gs);
   let h='<div class="ph"><h3>Prices at your books</h3><button class="small" id="bookbtn" aria-expanded="false" aria-controls="bookchips">Books ('+mine.length+')</button></div>';
   h+='<div class="chips" id="bookchips" hidden>'+ALLBOOKS.map(b=>'<button class="chip'+(mine.includes(b[0])?' on':'')+'" data-book="'+b[0]+'" aria-pressed="'+mine.includes(b[0])+'">'+b[1]+'</button>').join('')+'</div>';
