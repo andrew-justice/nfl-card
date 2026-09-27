@@ -1,0 +1,65 @@
+name: Build card
+
+on:
+  schedule:
+    # GitHub runs schedules on UTC time. Each of these lands before kickoff both before and after
+    # the November clock change (EDT, then EST). Runs can start a few minutes late when GitHub is busy.
+    - cron: '10 12 * * *'   # every morning: 8:10 am EDT / 7:10 am EST
+    - cron: '35 23 * * 4'   # Thursday, before the 8:15 pm game
+    - cron: '40 16 * * 0'   # Sunday, before the 1 pm games
+    - cron: '35 19 * * 0'   # Sunday, before the 4:05 and 4:25 pm games
+    - cron: '40 23 * * 0'   # Sunday, before the 8:20 pm game
+    - cron: '35 23 * * 1'   # Monday, before the 8:15 pm game
+  workflow_dispatch:         # the "Run workflow" button, for fresh prices any time
+
+permissions:
+  contents: write            # save the pick log and price history back to the repository
+  pages: write
+  id-token: write
+
+concurrency:
+  group: card
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the card
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}   # set under Settings > Secrets and variables > Actions
+        run: python3 nfl-build.py
+
+      - name: Assemble the site
+        run: python3 web/site.py
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+      - name: Save the pick log and price history
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for f in nfl-picks.csv nfl-lines-seen.csv nfl-odds-seen.csv; do
+            if [ -f "$f" ]; then git add "$f"; fi
+          done
+          if ! git diff --cached --quiet; then
+            git commit -m "Update pick log and price history"
+            git pull --rebase --autostash
+            git push
+          fi
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

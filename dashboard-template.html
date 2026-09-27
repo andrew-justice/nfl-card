@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="color-scheme" content="light dark">
+<title>NFL model card</title>
+<style>
+:root{--paper:#F4F3EE;--ink:#17202A;--ink2:#5B6572;--rule:#DCDAD2;--row:#FFFFFF;--chip:#ECEAE3;--green:#1E6B3A;--green-soft:#DCEBE0;--maroon:#8B2635;--maroon-soft:#F0DDE0;--amber:#A8780A;--amber-soft:#F7ECC9;--bar:#C9C6BC}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#14181D;--ink:#ECEAE3;--ink2:#A3AAB3;--rule:#2C333B;--row:#1C2128;--chip:#252B33;--green:#6CC38B;--green-soft:#1E3628;--maroon:#E48A98;--maroon-soft:#3B2228;--amber:#E6BC4F;--amber-soft:#3A3220;--bar:#3A424B;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#14181D;--ink:#ECEAE3;--ink2:#A3AAB3;--rule:#2C333B;--row:#1C2128;--chip:#252B33;--green:#6CC38B;--green-soft:#1E3628;--maroon:#E48A98;--maroon-soft:#3B2228;--amber:#E6BC4F;--amber-soft:#3A3220;--bar:#3A424B;color-scheme:dark}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:"Avenir Next",-apple-system,"Helvetica Neue",Arial,sans-serif;font-size:16px;line-height:1.35;-webkit-text-size-adjust:100%}
+body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
+.num{font-variant-numeric:tabular-nums}
+header{padding:12px 16px 6px;display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+header h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em}
+header .sub{color:var(--ink2);font-size:12px;text-align:right;white-space:pre-line}
+.weeks{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px 16px;background:var(--paper);scrollbar-width:none;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--rule)}
+.weeks::-webkit-scrollbar{display:none}
+.wk{flex:0 0 auto;border:1px solid var(--rule);background:var(--row);border-radius:16px;padding:5px 11px;font-size:14px;color:var(--ink2)}
+.wk.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.wk.done{border-style:dashed}
+section{display:none}section.on{display:block}
+.hero{padding:16px 16px 4px}
+.hero .wkname{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.hero .wkdates{color:var(--ink2);font-size:14px;margin-top:4px}
+.panel{padding:12px 16px}
+.panel h3{margin:14px 0 6px;font-size:16px;font-weight:600;text-wrap:balance}
+.panel h3:first-child{margin-top:4px}
+.panel h4{margin:14px 0 2px;font-size:13px;color:var(--ink2);font-weight:600}
+.panel p{margin:6px 0;font-size:14px;max-width:65ch}
+.ph{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:4px}
+.ph h3{margin:0}
+.muted{color:var(--ink2)}
+.note{font-size:13px}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+@media (max-width:360px){.pgrid{grid-template-columns:1fr}}
+.pk{background:var(--row);border:1px solid var(--rule);border-radius:10px;padding:8px 10px 9px;display:grid;grid-template-columns:1fr auto;grid-template-areas:"tm pc" "op fp" "cb cb" "fl fl";row-gap:3px;align-items:baseline}
+.pk .fp{grid-area:fp;font-size:12px;color:var(--ink2);text-align:right;white-space:nowrap}
+.pk .tm{grid-area:tm;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk .pc{grid-area:pc;font-weight:600;font-size:15px}
+.pk .op{grid-area:op;font-size:12px;color:var(--ink2)}
+.pk .cb{grid-area:cb;height:4px;border-radius:2px;background:var(--chip);overflow:hidden;margin-top:3px}
+.pk .cb i{display:block;height:100%;background:var(--green);border-radius:2px}
+.pk.toss .cb i{background:var(--bar)}
+.pk.done{opacity:.55}
+.pk .fl{grid-area:fl;display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.flag{font-size:11px;padding:1px 6px;border-radius:8px;background:var(--chip);color:var(--ink2)}
+.flag.warn{background:var(--amber-soft);color:var(--amber)}
+.flag.hit{background:var(--green-soft);color:var(--green)}
+.flag.miss{background:var(--maroon-soft);color:var(--maroon)}
+.lrow{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--rule);font-size:14px}
+.lrow b{font-size:15px}
+.lrow .why{grid-column:2;color:var(--ink2);font-size:13px}
+.tier{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:9px;background:var(--chip);color:var(--ink2);min-width:56px;text-align:center}
+.tier.strong{background:var(--green);color:var(--paper)}
+.tier.mid{background:var(--green-soft);color:var(--green)}
+.list-note{padding:8px 16px 4px;font-size:13px;color:var(--ink2)}
+.game{background:var(--row);border-top:1px solid var(--rule);padding:12px 16px}
+.game:last-child{border-bottom:1px solid var(--rule)}
+.g1{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;cursor:pointer}
+.teams{font-weight:600;font-size:17px;line-height:1.25}
+.teams .at{font-weight:400;color:var(--ink2);font-size:14px;padding:0 3px}
+.sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:1px;border:1px solid rgba(128,128,128,.35)}
+.when{color:var(--ink2);font-size:12px;margin-top:2px}
+.proj{text-align:right;font-size:12px;color:var(--ink2);white-space:nowrap}
+.proj b{display:block;font-size:17px;color:var(--ink);font-weight:600}
+.lines{display:grid;grid-template-columns:52px 1fr 40px 1fr;align-items:center;gap:2px 6px;margin-top:10px;font-size:15px;cursor:pointer}
+.lines .lb{font-size:12px;color:var(--ink2)}
+.lines .hd{font-size:11px;color:var(--ink2)}
+.lines .hd.r{text-align:right}
+.lines .m{text-align:right;font-weight:600}
+.lines .k{text-align:right;color:var(--ink2)}
+.gap{height:20px;position:relative}
+.gap i{position:absolute;top:8px;height:4px;border-radius:2px;background:var(--green)}
+.gap i.neg{background:var(--maroon)}
+.gap b{position:absolute;left:0;right:0;top:-2px;text-align:center;font-size:10px;font-weight:600;color:var(--ink2)}
+.leanline{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px;flex-wrap:wrap}
+.leanline b{font-weight:600}
+.leanline .why{color:var(--ink2);font-size:13px}
+.tags{margin-top:4px}
+.tag{display:inline-block;font-size:12px;padding:2px 7px;border-radius:10px;margin:6px 6px 0 0;background:var(--chip);color:var(--ink2)}
+.tag.qb{background:var(--amber-soft);color:var(--amber)}
+.tag.warn{background:var(--maroon-soft);color:var(--maroon)}
+.tag.ok{background:var(--green-soft);color:var(--green)}
+.tag.final{background:var(--ink);color:var(--paper)}
+.tag.inj{background:var(--maroon-soft);color:var(--maroon)}
+.injlist{font-size:13px;display:grid;gap:4px}
+.injlist b{font-weight:600}
+.detail{display:none;margin-top:12px;border-top:1px dashed var(--rule);padding-top:10px}
+.game.open .detail{display:block}
+.detail h4{margin:14px 0 4px;font-size:13px;font-weight:600;color:var(--ink2)}
+.detail h4:first-child{margin-top:2px}
+.detail .sub4{font-size:12px;color:var(--ink2);margin:-2px 0 6px}
+.fx{display:grid;grid-template-columns:minmax(0,1fr) 38% 72px;gap:8px;align-items:center;font-size:13px;padding:3px 0}
+.fx .fl2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fx .tk{position:relative;height:10px;background:linear-gradient(var(--rule),var(--rule)) center/1px 100% no-repeat}
+.fx .tk i{position:absolute;top:2px;height:6px;border-radius:3px;background:var(--green)}
+.fx .tk i.neg{background:var(--maroon)}
+.fx .fv{text-align:right;font-weight:600}
+.fx.base{color:var(--ink2);border-bottom:1px solid var(--rule);padding-bottom:6px;margin-bottom:2px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:2px 12px;font-size:14px}
+.kv span:nth-child(even){text-align:right}
+.chart{width:100%;height:auto;display:block;margin-top:4px}
+.inrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:6px}
+.inrow label{font-size:12px;color:var(--ink2);display:block}
+input[type=number]{width:100%;font:inherit;font-size:16px;padding:7px 8px;border:1px solid var(--rule);border-radius:8px;background:var(--amber-soft);color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+.verdict{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--chip);font-size:14px}
+.mlgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.mlside{background:var(--paper);border-radius:8px;padding:8px 10px;display:grid;gap:4px;font-size:13px}
+.mlside b{font-size:15px}
+.mlside .fair{font-size:20px;font-weight:600}
+.mlside label{font-size:12px;color:var(--ink2)}
+.verdict.pos{background:var(--green-soft)}.verdict.neg{background:var(--maroon-soft)}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-weight:600;color:var(--ink2);text-align:right;padding:4px 6px;border-bottom:1px solid var(--rule);vertical-align:bottom}
+th:first-child,td:first-child{text-align:left}
+td{padding:4px 6px;text-align:right;border-bottom:1px solid var(--rule)}
+tr.hi td{background:var(--green-soft)}
+tr.grp td{color:var(--ink2);font-weight:600;padding-top:10px;border-bottom:none}
+td .role,th .role{display:block;font-size:11px;color:var(--ink2);font-weight:400}
+td.num{white-space:nowrap}
+button{font:inherit;font-size:14px;padding:7px 12px;border-radius:8px;border:1px solid var(--ink);background:var(--row);color:var(--ink)}
+button.small{font-size:13px;padding:5px 9px}
+button:active{opacity:.7}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.stat{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:14px;padding:5px 0;border-bottom:1px solid var(--rule)}
+.stat span:nth-child(even){text-align:right}
+.legs{margin:8px 0}
+.leg{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule);font-size:14px}
+.empty{padding:14px 0;color:var(--ink2);font-size:14px}
+.divhead{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 4px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--ink2);margin:6px 0 2px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--row);border-top:1px solid var(--rule);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:none;border-radius:0;background:none;padding:10px 0 8px;font-size:12px;color:var(--ink2)}
+nav button.on{color:var(--ink);font-weight:600;box-shadow:inset 0 2px 0 var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}.chips[hidden]{display:none}
+.chip{font-size:13px;padding:5px 10px;border-radius:14px;border:1px solid var(--rule);background:var(--row);color:var(--ink2)}
+.chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.vrow{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule);font-size:14px}
+.vrow b{font-size:15px}.vrow .why{grid-column:2 / 4;color:var(--ink2);font-size:13px}
+.evb{font-size:12px;font-weight:600;padding:2px 7px;border-radius:9px;background:var(--green-soft);color:var(--green);min-width:56px;text-align:center}
+td.pos{color:var(--green);font-weight:600}
+details.books{margin-top:8px}details.books summary{font-size:13px;color:var(--ink2);cursor:pointer;padding:4px 0}
+.betrow{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px 0;border-bottom:1px solid var(--rule);font-size:14px}
+.betrow b{font-size:15px}.betrow .note{margin-top:2px}
+.betamt{text-align:right;font-weight:600;white-space:nowrap}
+.betamt .x,.leg .x{border:none;background:none;color:var(--maroon);font-size:18px;padding:0 0 0 8px;vertical-align:-1px}
+dialog{border:1px solid var(--rule);border-radius:14px;background:var(--row);color:var(--ink);padding:14px 16px 16px;width:min(420px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+dialog h3{margin:0 0 8px;font-size:17px}
+.fl{display:block;font-size:12px;color:var(--ink2);margin-top:10px}
+select{width:100%;font:inherit;font-size:16px;padding:7px 8px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--ink)}
+.seg{display:flex;gap:0;margin-top:10px;border:1px solid var(--ink);border-radius:9px;overflow:hidden}
+.seg button{flex:1;border:none;border-radius:0;background:var(--row);color:var(--ink);font-size:14px;padding:8px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg button+button{border-left:1px solid var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:600}
+input:disabled{opacity:.45}
+textarea{width:100%;font:inherit;font-size:14px;padding:7px 8px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--ink);resize:vertical}
+#imp-msg:empty{display:none}
+button.primary{background:var(--ink);color:var(--paper)}
+#toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--paper);font-size:14px;padding:8px 14px;border-radius:18px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+#toast.on{opacity:1}
+@media (min-width:700px){main,header,.weeks{max-width:640px;margin:0 auto}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header><h1>NFL model card</h1><div class="sub" id="subtitle"></div></header>
+<div class="weeks" id="weeks"></div>
+<main>
+  <section id="tab-card" class="on">
+    <div class="hero"><div class="wkname" id="wkname"></div><div class="wkdates" id="wkdates"></div></div>
+    <div class="panel" id="leans"></div>
+    <div class="list-note" id="cardnote"></div>
+    <div id="games"></div>
+  </section>
+  <section id="tab-bets"><div class="panel" id="bets"></div></section>
+  <section id="tab-parlay"><div class="panel" id="parlay"></div></section>
+  <section id="tab-season"><div class="panel" id="season"></div></section>
+  <section id="tab-record"><div class="panel" id="record"></div></section>
+  <section id="tab-method"><div class="panel" id="method"></div></section>
+</main>
+<nav>
+  <button data-tab="card" class="on">Card</button>
+  <button data-tab="bets">Bets</button>
+  <button data-tab="parlay">Parlay</button>
+  <button data-tab="season">Season</button>
+  <button data-tab="record">Record</button>
+  <button data-tab="method">Method</button>
+</nav>
+<dialog id="betdlg" aria-labelledby="bf-title"><form id="betform" method="dialog" novalidate>
+  <h3 id="bf-title">Log a bet</h3>
+  <label class="fl" for="bf-game">Game</label><select id="bf-game"></select>
+  <div class="seg" id="bf-kind" role="group" aria-label="Bet type"><button type="button" data-v="ml">Moneyline</button><button type="button" data-v="sp">Spread</button><button type="button" data-v="to">Total</button></div>
+  <div class="seg" id="bf-side" role="group" aria-label="Side"></div>
+  <div class="inrow"><div><label for="bf-line">Line</label><input id="bf-line" type="number" step="any"></div><div><label for="bf-price">Price</label><input id="bf-price" type="number" step="any"></div><div><label for="bf-stake">Stake, $</label><input id="bf-stake" type="number" step="1" min="0" inputmode="decimal"></div></div>
+  <label class="fl" for="bf-book">Book</label><select id="bf-book"></select>
+  <div class="verdict" id="bf-check" aria-live="polite"></div>
+  <div class="btns"><button type="button" id="bf-cancel">Cancel</button><button type="submit" class="primary">Save bet</button></div>
+</form></dialog>
+<dialog id="impdlg" aria-labelledby="imp-title"><form id="impform" method="dialog" novalidate>
+  <h3 id="imp-title">Import bets</h3>
+  <p class="muted note" style="margin:0 0 8px">Paste the text from Copy as text in another copy of the card. Bets already here are skipped.</p>
+  <textarea id="imp-text" rows="8" aria-label="Bets to import"></textarea>
+  <div class="verdict" id="imp-msg" aria-live="polite"></div>
+  <div class="btns"><button type="button" id="imp-cancel">Cancel</button><button type="submit" class="primary">Import</button></div>
+</form></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+/*__DATA__*/
+const TEAM={ARI:['Cardinals','#97233F'],ATL:['Falcons','#A71930'],BAL:['Ravens','#241773'],BUF:['Bills','#00338D'],CAR:['Panthers','#0085CA'],CHI:['Bears','#0B162A'],CIN:['Bengals','#FB4F14'],CLE:['Browns','#311D00'],DAL:['Cowboys','#003594'],DEN:['Broncos','#FB4F14'],DET:['Lions','#0076B6'],GB:['Packers','#203731'],HOU:['Texans','#03202F'],IND:['Colts','#002C5F'],JAX:['Jaguars','#006778'],KC:['Chiefs','#E31837'],LA:['Rams','#003594'],LAC:['Chargers','#0080C6'],LV:['Raiders','#000000'],MIA:['Dolphins','#008E97'],MIN:['Vikings','#4F2683'],NE:['Patriots','#002244'],NO:['Saints','#D3BC8D'],NYG:['Giants','#0B2265'],NYJ:['Jets','#125740'],PHI:['Eagles','#004C54'],PIT:['Steelers','#FFB612'],SEA:['Seahawks','#002244'],SF:['49ers','#AA0000'],TB:['Buccaneers','#D50A0A'],TEN:['Titans','#0C2340'],WAS:['Commanders','#5A1414']};
+const nm=t=>(TEAM[t]||[t])[0];
+const sw=t=>'<i class="sw" style="background:'+((TEAM[t]||['','#888'])[1])+'"></i>';
+// ---------- storage (best-effort; the page works without it) ----------
+const store={get(k,d){try{const v=localStorage.getItem('nflcard.'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('nflcard.'+k,JSON.stringify(v))}catch(e){}}};
+const S={week:DATA.current_week,lines:store.get('lines',{}),bankroll:store.get('bankroll',1000),legs:store.get('legs',[]),open:null,parlayPrice:store.get('pp',''),books:store.get('books',null),stake:store.get('stake',20)};
+const RM=DATA.residuals.margin,RT=DATA.residuals.total,N=RM.length,BE=DATA.breakeven;
+const CS=DATA.calib.spread,CT=DATA.calib.total;
+const TEST=DATA.backtest.periods['2021-2025'];
+const TOSS=0.55;
+const fmt1=x=>(Math.round(x*10)/10).toFixed(1);
+const pct=x=>(x*100).toFixed(1)+'%';
+const pct0=x=>Math.round(x*100)+'%';
+const signed=x=>(x>0?'+':'')+fmt1(x);
+const signedPct=x=>(x>0?'+':'')+(x*100).toFixed(1)+'%';
+const has=x=>x!==null&&x!==undefined;
+const rate=wl=>wl[1]?wl[0]/wl[1]:0;
+function impliedProb(am){am=Number(am);if(!am)return BE;return am<0?(-am)/(-am+100):100/(am+100)}
+function decimal(am){am=Number(am);if(!am)return 1/BE;return am<0?1+100/(-am):1+am/100}
+function amFromDec(d){return d>=2?'+'+Math.round((d-1)*100):''+Math.round(-100/(d-1))}
+function coverProb(pred,line){let w=0,p=0;for(let i=0;i<N;i++){const m=Math.floor(pred+RM[i]+0.5);if(m>line)w++;else if(m===line)p++}return{win:w/N,push:p/N}}
+function overProb(pred,line){let w=0,p=0;for(let i=0;i<RT.length;i++){const t=Math.floor(pred+RT[i]+0.5);if(t>line)w++;else if(t===line)p++}return{win:w/RT.length,push:p/RT.length}}
+function noPush(pr){return pr.push>=1?0.5:pr.win/(1-pr.push)}
+function calSpread(model,line){return 1/(1+Math.exp(-(CS[0]+CS[1]*(model-line))))}
+function calTotal(model,line){return 1/(1+Math.exp(-(CT[0]+CT[1]*(model-line))))}
+function jointProb(legs){let ok=0,tot=0;for(let i=0;i<N;i++){let all=true,push=false;for(const l of legs){const v=l.type==='spread'?Math.floor(l.pred+RM[i]+0.5):Math.floor(l.pred+RT[i]+0.5);if(v===l.line){push=true;continue}const win=(l.side==='home'||l.side==='over')?v>l.line:v<l.line;if(!win){all=false;break}}if(push)continue;tot++;if(all)ok++}return tot?ok/tot:0.5}
+function kelly(p,am){const b=decimal(am)-1;const f=(p*b-(1-p))/b;return Math.max(0,Math.min(DATA.kelly.cap,f*DATA.kelly.frac))}
+// ---------- pricing around the market's number: chance of every exact margin or total, key numbers included ----------
+const KY=DATA.keys;
+function erf(x){const t=1/(1+0.3275911*Math.abs(x));const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return x>=0?y:-y}
+const Phi=x=>0.5*(1+erf(x/Math.SQRT2));
+const PMF={};
+function pmf(kind,c){c=Math.round(c*100)/100;const key=kind+c;if(PMF[key])return PMF[key];
+  const m=kind==='m';const lo=m?-80:0,hi=m?80:140;const sd=m?KY.margin.sd:Math.max(5,KY.total.a+KY.total.b*(c-44));const W=m?KY.margin.w:KY.total.w;
+  const p=[];let z=0;for(let k=lo;k<=hi;k++){const i=m?Math.abs(k):k;const v=(Phi((k+0.5-c)/sd)-Phi((k-0.5-c)/sd))*(i<W.length?W[i]:1);p.push(v);z+=v}
+  for(let i=0;i<p.length;i++)p[i]/=z;return PMF[key]={lo,p}}
+// win, push and loss chances for a bet that wins when the margin (kind m) or total (kind t) lands above `line` (up) or below it
+function wpl(kind,c,line,up){const d=pmf(kind,c);let w=0,pu=0,l=0;for(let i=0;i<d.p.length;i++){const k=d.lo+i,v=d.p[i];if(k===line)pu+=v;else if((k>line)===up)w+=v;else l+=v}return{w,p:pu,l}}
+// a spread or total bet as [kind, line, up]: home spread wins when margin > -point, away when margin < point
+function sideSpec(mk,side,point){return mk==='sp'?(side==='home'?['m',-point,true]:['m',point,false]):['t',point,side==='over']}
+function solveCenter(kind,line,up,q){let lo=line-25,hi=line+25;for(let i=0;i<14;i++){const mid=(lo+hi)/2;const r=wpl(kind,mid,line,up);if((r.w/(r.w+r.l)<q)===up)lo=mid;else hi=mid}return (lo+hi)/2}
+const imp=x=>{x=Number(x);return x<0?-x/(-x+100):100/(x+100)};
+const vf=(a,b)=>imp(a)/(imp(a)+imp(b));
+// moneyline chance with the cut removed by the power method (fairer to longshots than dividing by the total)
+function nv(a,b){const qa=imp(a),qb=imp(b);let lo=0.5,hi=2;for(let i=0;i<40;i++){const k=(lo+hi)/2;if(Math.pow(qa,k)+Math.pow(qb,k)>1)lo=k;else hi=k}return Math.pow(qa,(lo+hi)/2)}
+function fairAm(p){p=Math.min(Math.max(p,0.001),0.999);return p>=0.5?-Math.round(100*p/(1-p)):Math.round(100*(1-p)/p)}
+function median(xs){const s=[...xs].sort((a,b)=>a-b),n=s.length;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2}
+// ---------- live prices by book (only in builds made with an odds key) ----------
+const OM=DATA.odds_meta,REFB=OM?OM.ref:'pinnacle';
+const ALLBOOKS=OM?OM.books:[];
+const DEFAULT_BOOKS=['draftkings','fanduel','betmgm','williamhill_us','fanatics','espnbet','betrivers','hardrockbet'];
+const KNOWN_BOOKS={pinnacle:'Pinnacle',draftkings:'DraftKings',fanduel:'FanDuel',betmgm:'BetMGM',williamhill_us:'Caesars',fanatics:'Fanatics',espnbet:'theScore Bet',betrivers:'BetRivers',hardrockbet:'Hard Rock Bet',ballybet:'Bally Bet',betparx:'betPARX',fliff:'Fliff',lowvig:'LowVig.ag',betonlineag:'BetOnline.ag',bovada:'Bovada',mybookieag:'MyBookie.ag',betus:'BetUS',other:'Other'};
+const bookTitle=k=>{const b=ALLBOOKS.find(x=>x[0]===k);return b?b[1]:(KNOWN_BOOKS[k]||k)};
+// kickoff as a real instant (schedule times are US Eastern)
+function kickMs(g){const d=g.kickoff.slice(0,10),mo=Number(d.slice(5,7)),dy=Number(d.slice(8,10));const edt=(mo>3&&mo<11)||(mo===3&&dy>=8)||(mo===11&&dy<7);return Date.parse(d+'T'+g.kickoff.slice(11,16)+':00'+(edt?'-04:00':'-05:00'))}
+const started=g=>kickMs(g)<=Date.now();
+function myBooks(){const have=ALLBOOKS.map(b=>b[0]);let mine=(S.books||[]).filter(k=>have.includes(k));if(!mine.length)mine=have.filter(k=>DEFAULT_BOOKS.includes(k));return mine.length?mine:have}
+function refOf(g){if(g._ref)return g._ref;const O=g.odds||{},R={},bs=Object.keys(O);
+  const ml=bs.filter(b=>O[b].ml).map(b=>[b,nv(O[b].ml[0],O[b].ml[1])]);
+  if(ml.length){const r=ml.find(x=>x[0]===REFB);R.ml=r?r[1]:median(ml.map(x=>x[1]));R.mlSrc=r?REFB:'median'}
+  if(KY)for(const mk of ['sp','to']){const cs=[];for(const b of bs){const v=O[b][mk];if(!v||(mk==='sp'?v[0]!==-v[2]:v[0]!==v[2]))continue;
+      cs.push([b,mk==='sp'?solveCenter('m',-v[0],true,vf(v[1],v[3])):solveCenter('t',v[0],true,vf(v[1],v[3]))])}
+    if(cs.length){const r=cs.find(x=>x[0]===REFB);R[mk]=r?r[1]:median(cs.map(x=>x[1]));R[mk+'Src']=r?REFB:'median'}}
+  return g._ref=R}
+// one book's price for one side: its point, price, chance to win, fair price at that point, and expected return per dollar
+function offer(g,book,mk,side){const v=((g.odds||{})[book]||{})[mk];if(!v)return null;const R=refOf(g);
+  if(mk==='ml'){if(!has(R.ml))return null;const p=side==='home'?R.ml:1-R.ml,price=side==='home'?v[0]:v[1];return{book,mk,side,point:null,price,p,push:0,ev:p*(decimal(price)-1)-(1-p),fair:fairAm(p)}}
+  if(!has(R[mk]))return null;const a=(side==='home'||side==='over');const point=a?v[0]:v[2],price=a?v[1]:v[3];
+  const [k,line,up]=sideSpec(mk,side,point);const r=wpl(k,R[mk],line,up);return{book,mk,side,point,price,p:r.w,push:r.p,ev:r.w*(decimal(price)-1)-r.l,fair:fairAm(r.w/(r.w+r.l))}}
+function bestOffer(g,mk,side,books){let best=null;for(const b of books||myBooks()){const o=offer(g,b,mk,side);if(o&&(!best||o.ev>best.ev))best=o}return best}
+function sideTeam(g,side){return side==='home'?g.home:(side==='away'?g.away:null)}
+function offerText(g,o,short){const pt=has(o.point)?(o.mk==='to'?fmt1(o.point):signedLine(o.point)):'';
+  if(o.mk==='to')return (o.side==='over'?'Over ':'Under ')+pt+' ('+am(o.price)+')';
+  const t=short?sideTeam(g,o.side):nm(sideTeam(g,o.side));return o.mk==='ml'?t+' '+am(o.price):t+' '+pt+' ('+am(o.price)+')'}
+function refText(g,o){const R=refOf(g);const src=o.mk==='ml'?R.mlSrc:R[o.mk+'Src'];if(src!==REFB)return 'fair from the median of '+Object.keys(g.odds).length+' books';
+  const rb=offer(g,REFB,o.mk,o.side);return rb?bookTitle(REFB)+' '+(o.mk==='ml'?am(rb.price):(o.mk==='to'?fmt1(rb.point):signedLine(rb.point))+' '+am(rb.price)):''}
+function oddsTime(){if(!OM||!OM.fetched)return '';return kick(OM.fetched)}
+function teamSpread(line,home,away){if(!has(line))return '—';if(line===0)return 'Pick';return line>0?home+' -'+fmt1(line):away+' -'+fmt1(-line)}
+function signedLine(x){return x===0?'PK':(x>0?'+':'')+fmt1(x)}
+function weekLabel(w){return w<=18?'Week '+w:({19:'Wild card',20:'Divisional',21:'Conference',22:'Super Bowl'})[w]||('Week '+w)}
+function kick(k){const [d,t]=k.split(' ');const dt=new Date(d+'T'+t+':00');const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],mos=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];let h=dt.getHours(),m=String(dt.getMinutes()).padStart(2,'0');const ap=h>=12?'pm':'am';h=h%12||12;return days[dt.getDay()]+' '+mos[dt.getMonth()]+' '+dt.getDate()+', '+h+':'+m+ap+' ET'}
+function dateRange(gs){const ds=gs.map(g=>g.kickoff.slice(0,10)).sort();const mos=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const f=d=>{const x=new Date(d+'T12:00:00');return mos[x.getMonth()]+' '+x.getDate()};return ds.length?f(ds[0])+(ds[ds.length-1]!==ds[0]?' to '+f(ds[ds.length-1]):''):''}
+function tier(gap){const a=Math.abs(gap);return a>=4?['strong','Strong lean']:a>=2?['mid','Lean']:['','Pass']}
+function gameLines(g){const u=S.lines[g.game_id]||{};const us=u.spread!==undefined&&u.spread!=='',ut=u.total!==undefined&&u.total!=='';
+  return{spread:us?Number(u.spread):g.spread_market,sPrice:u.sp?Number(u.sp):-110,total:ut?Number(u.total):g.total_market,tPrice:u.tp?Number(u.tp):-110,userSpread:us,userTotal:ut}}
+function edges(g){const L=gameLines(g);const out={};
+  if(has(L.spread)){const pr=coverProb(g.spread_model,L.spread);const ph=noPush(pr);const ch=calSpread(g.spread_model,L.spread);const be=impliedProb(L.sPrice);const hs=g.spread_model>=L.spread;
+    out.spread={pHome:ph,pAway:1-ph,calHome:ch,calAway:1-ch,push:pr.push,line:L.spread,price:L.sPrice,user:L.userSpread,homeSide:hs,gap:g.spread_model-L.spread,
+      side:hs?g.home:g.away,text:(hs?g.home:g.away)+' '+signedLine(hs?-L.spread:L.spread),p:hs?ph:1-ph,cal:hs?ch:1-ch,edge:(hs?ch:1-ch)-be}}
+  if(has(L.total)){const pr=overProb(g.total_model,L.total);const po=noPush(pr);const co=calTotal(g.total_model,L.total);const be=impliedProb(L.tPrice);const ov=g.total_model>=L.total;
+    out.total={pOver:po,pUnder:1-po,calOver:co,calUnder:1-co,push:pr.push,line:L.total,price:L.tPrice,user:L.userTotal,overSide:ov,gap:g.total_model-L.total,
+      side:ov?'over':'under',text:(ov?'Over ':'Under ')+fmt1(L.total),p:ov?po:1-po,cal:ov?co:1-co,edge:(ov?co:1-co)-be}}
+  out.best=Math.max(out.spread?Math.abs(out.spread.gap):0,out.total?Math.abs(out.total.gap):0);return out}
+function proj(g){return{home:Math.round((g.total_model+g.spread_model)/2),away:Math.round((g.total_model-g.spread_model)/2)}}
+const am=x=>has(x)&&x!==''?(Number(x)>0?'+'+Number(x):''+Number(x)):'—';
+function mlProfit(x){x=Number(x);return x>0?x/100:100/(-x)}
+function validMl(x){x=Number(x);return x&&isFinite(x)&&(x>=100||x<=-100)}
+function pickOf(g){const home=g.p_pick_home>=0.5;return{team:home?g.home:g.away,opp:home?g.away:g.home,home,p:g.p_winner,basis:g.pick_basis,toss:g.p_winner<TOSS,
+  fair:home?g.fair_home:g.fair_away,disagree:g.pick_basis==='market'&&g.model_winner!==g.winner,modelTeam:g.model_winner,pModel:g.p_model_winner}}
+function pickResult(g){if(!g.final||g.home_score===g.away_score)return null;return (g.home_score>g.away_score)===(g.p_pick_home>=0.5)}
+function shortDate(d){if(!d)return '';const x=new Date(d+'T12:00:00');return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][x.getMonth()]+' '+x.getDate()}
+function injTag(g,side){const l=g['inj_'+side];if(!l||!l.length)return '';
+  const list=l.slice(0,3).map(p=>p[0].split(' ').slice(-1)[0]+' '+p[1]+' ('+p[2].toLowerCase()+')').join(', ');
+  return '<span class="tag inj">'+g[side]+' injuries: '+list+'</span>'}
+function wxTag(g){const w=g.wx;if(!w||w.indoor||!has(w.wind)||g.final)return '';if(!(w.wind>=12||w.temp<=40||w.temp>=88))return '';
+  return '<span class="tag">'+(w.src==='forecast'?'Forecast: ':'')+w.wind+' mph wind, '+w.temp+'°F</span>'}
+function moveTag(g){if(g.final||!has(g.spread_first)||!has(g.spread_market))return '';const parts=[];
+  if(Math.abs(g.spread_market-g.spread_first)>=0.5)parts.push(teamSpread(g.spread_first,g.home,g.away)+' to '+teamSpread(g.spread_market,g.home,g.away));
+  if(has(g.total_first)&&has(g.total_market)&&Math.abs(g.total_market-g.total_first)>=0.5)parts.push('total '+fmt1(g.total_first)+' to '+fmt1(g.total_market));
+  return parts.length?'<span class="tag">Line moved since '+shortDate(g.first_seen)+': '+parts.join(', ')+'</span>':''}
+function injHtml(g){const rows=[];for(const side of ['away','home']){const l=g['inj_'+side];if(l&&l.length)rows.push('<div><b>'+nm(g[side])+'</b>: '+l.map(p=>p[0]+' '+p[1]+', '+p[2].toLowerCase()+', '+Math.round(p[3]*100)+'% of snaps').join('; ')+'</div>')}
+  return rows.length?'<h4>Injuries that matter</h4><div class="sub4">Final report status, weighted by each player\'s share of snaps over the last four games.</div><div class="injlist">'+rows.join('')+'</div>':''}
+function qbTags(g){const t=[];for(const side of ['home','away']){const qb=g[side+'_qb'],usual=g['usual_qb_'+side],nw=g['qb_new_'+side],adj=g['qb_adj_'+side];const team=g[side];
+  if(nw)t.push('<span class="tag warn">'+team+' QB '+qb+': no history, replacement level assumed</span>');
+  else if((qb&&usual&&qb!==usual)||Math.abs(adj)>=0.5)t.push('<span class="tag qb">'+team+' QB '+qb+': '+signed(adj)+' pts vs recent starters'+(usual&&qb!==usual?' (last start: '+usual+')':'')+'</span>')}
+  return t.join('')}
+function gapHtml(model,market){if(!has(market))return '<div class="gap"></div>';const gap=model-market;const w=Math.min(20,Math.abs(gap)*3);
+  return '<div class="gap"><b class="num">'+signed(gap)+'</b><i class="'+(gap<0?'neg':'')+'" style="left:'+(gap>=0?20:20-w)+'px;width:'+w+'px"></i></div>'}
+// outcome distribution chart: integer margins (or totals) from the model's error distribution, with model and market marked
+function distChart(pred,line,resid,keyNums,label){const W=340,H=96,lo=Math.floor(pred-24),hi=Math.ceil(pred+24);const bins={};let mx=0;
+  for(let i=0;i<resid.length;i++){const v=Math.floor(pred+resid[i]+0.5);if(v<lo||v>hi)continue;bins[v]=(bins[v]||0)+1;if(bins[v]>mx)mx=bins[v]}
+  const x=v=>10+(v-lo)/(hi-lo)*(W-20);const bw=(W-20)/(hi-lo);let s='<svg class="chart" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+label+'">';
+  for(let v=lo;v<=hi;v++){const c=bins[v]||0;if(!c)continue;const h=(c/mx)*60;const fill=has(line)?(v>line?'var(--green)':(v<line?'var(--maroon)':'var(--amber)')):'var(--bar)';
+    s+='<rect x="'+(x(v)-bw/2+0.4).toFixed(1)+'" y="'+(70-h).toFixed(1)+'" width="'+(bw-0.8).toFixed(1)+'" height="'+h.toFixed(1)+'" fill="'+fill+'" opacity="'+(keyNums.includes(v)?'1':'0.55')+'"/>'}
+  s+='<line x1="10" y1="70.5" x2="'+(W-10)+'" y2="70.5" stroke="var(--rule)"/>';
+  for(const v of keyNums){if(v<lo||v>hi)continue;s+='<text x="'+x(v).toFixed(1)+'" y="84" font-size="10" text-anchor="middle" fill="var(--ink2)">'+v+'</text>'}
+  const right=pred>=(has(line)?line:pred);
+  s+='<line x1="'+x(pred).toFixed(1)+'" y1="4" x2="'+x(pred).toFixed(1)+'" y2="70" stroke="var(--ink)" stroke-width="1.5"/><text x="'+(x(pred)+(right?4:-4)).toFixed(1)+'" y="12" font-size="10" fill="var(--ink)" text-anchor="'+(right?'start':'end')+'">model '+fmt1(pred)+'</text>';
+  if(has(line)){const close=Math.abs(x(pred)-x(line))<8;s+='<line x1="'+x(line).toFixed(1)+'" y1="4" x2="'+x(line).toFixed(1)+'" y2="70" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="3 2"/><text x="'+(x(line)+(right?-4:4)).toFixed(1)+'" y="'+(close?24:12)+'" font-size="10" fill="var(--amber)" text-anchor="'+(right?'end':'start')+'">market '+fmt1(line)+'</text>'}
+  return s+'</svg>'}
+// factor bars: what pushes the model's number away from an average matchup
+const GROUP_LABEL={'Pass rush and protection':'Pass rush','Special teams and penalties':'Special teams','Schedule, rest and venue':'Schedule and venue','QB and coach experience':'Experience','Record against the line':'Line history'};
+function factorHtml(list,base,value,posLab,negLab,baseLab,baseVal){const top=list.slice(0,4);const other=value-base-top.reduce((a,x)=>a+x[1],0);
+  const rows=top.concat([['Everything else',other]]);const mx=Math.max(0.5,...rows.map(r=>Math.abs(r[1])));
+  let h='<div class="fx base"><span class="fl2">'+baseLab+'</span><span></span><span class="fv num">'+baseVal+'</span></div>';
+  for(const [lab,v] of rows){const w=Math.abs(v)/mx*50;h+='<div class="fx"><span class="fl2">'+(GROUP_LABEL[lab]||lab)+'</span><span class="tk"><i class="'+(v<0?'neg':'')+'" style="'+(v>=0?'left:50%':'right:50%')+';width:'+w.toFixed(1)+'%"></i></span><span class="fv num">'+(v>=0?posLab:negLab)+' +'+fmt1(Math.abs(v))+'</span></div>'}
+  return h}
+// ---------- prices at your books ----------
+function valueSpots(games){const out=[];const books=myBooks();
+  for(const g of games){if(g.final||!g.odds)continue;
+    for(const [mk,sides] of [['ml',['away','home']],['sp',['away','home']],['to',['over','under']]])for(const sd of sides){const o=bestOffer(g,mk,sd,books);if(o&&o.ev>=0.01)out.push({g,o})}}
+  return out.sort((a,b)=>b.o.ev-a.o.ev).slice(0,12)}
+function pricesHtml(rows){const gs=rows.map(r=>r.g).filter(g=>!g.final);if(!gs.length)return '';
+  if(!gs.some(g=>g.odds)){if(OM)return '';const why=DATA.odds_note&&!['no key','offline'].includes(DATA.odds_note)&&DATA.odds_note.indexOf('skipped')<0?' This build could not get prices: '+DATA.odds_note+'.':'';
+    return '<h3>Prices at your books</h3><p class="muted note">Built on your phone with a free odds key, the card shows the best price for every bet across your sportsbooks here and flags any that beat the fair price. See "Live odds" in the README.'+why+'</p>'}
+  const mine=myBooks();const spots=valueSpots(gs);
+  let h='<div class="ph"><h3>Prices at your books</h3><button class="small" id="bookbtn" aria-expanded="false" aria-controls="bookchips">Books ('+mine.length+')</button></div>';
+  h+='<div class="chips" id="bookchips" hidden>'+ALLBOOKS.map(b=>'<button class="chip'+(mine.includes(b[0])?' on':'')+'" data-book="'+b[0]+'" aria-pressed="'+mine.includes(b[0])+'">'+b[1]+'</button>').join('')+'</div>';
+  h+='<p class="muted note">'+ALLBOOKS.length+' books, prices as of '+oddsTime()+'. Fair is '+bookTitle(REFB)+'\'s price with its cut removed (the median of all books where it has none). Bets at your books priced better than fair:</p>';
+  if(spots.length)h+=spots.map(({g,o})=>'<div class="vrow"><span class="evb num">'+signedPct(o.ev)+'</span><b>'+offerText(g,o)+'</b><button class="small" data-logspot="'+g.game_id+'|'+o.mk+'|'+o.side+'|'+o.book+'">Log</button><span class="why">'+bookTitle(o.book)+'. '+nm(g.away)+' at '+nm(g.home)+'. Fair '+am(o.fair)+(o.mk==='ml'?'':' at this number')+'; '+refText(g,o)+'.</span></div>').join('');
+  else h+='<p class="empty">Nothing at your books beats the fair price right now. Open a game for its best prices.</p>';
+  return h}
+function bindPrices(el){const bb=document.getElementById('bookbtn');
+  if(bb){const chips=document.getElementById('bookchips');const show=v=>{chips.hidden=!v;bb.setAttribute('aria-expanded',String(v))};show(!!S.chipsOpen);
+    bb.onclick=()=>{S.chipsOpen=!S.chipsOpen;show(S.chipsOpen)};
+    chips.querySelectorAll('[data-book]').forEach(c=>c.onclick=()=>{const k=c.dataset.book;let m=myBooks();m=m.includes(k)?m.filter(x=>x!==k):m.concat(k);if(!m.length)return;S.books=m;store.set('books',m);renderCard()})}
+  el.querySelectorAll('[data-logspot]').forEach(b=>b.onclick=()=>{const [gid,mk,side,book]=b.dataset.logspot.split('|');openBet({game_id:gid,kind:mk,side,book})})}
+function pricesTable(g){if(!g.odds)return '';
+  let h='<h4>Best prices at your books</h4><div class="sub4">Fair is the break-even price at that number from '+bookTitle(REFB)+' with its cut removed; value is the expected return per dollar.</div><div class="tw"><table><tr><th>Bet</th><th>Best</th><th>Book</th><th>Fair</th><th>Value</th></tr>';
+  for(const [mk,sd] of [['ml','away'],['ml','home'],['sp','away'],['sp','home'],['to','over'],['to','under']]){const o=bestOffer(g,mk,sd);if(!o)continue;
+    const lab=mk==='to'?(sd==='over'?'Over ':'Under ')+fmt1(o.point):sideTeam(g,sd)+(mk==='ml'?' to win':' '+signedLine(o.point));
+    h+='<tr><td>'+lab+'</td><td class="num">'+am(o.price)+'</td><td>'+bookTitle(o.book)+'</td><td class="num">'+am(o.fair)+'</td><td class="num'+(o.ev>0?' pos':'')+'">'+signedPct(o.ev)+'</td></tr>'}
+  return h+'</table></div>'+allBooksHtml(g)}
+function allBooksHtml(g){const bs=ALLBOOKS.map(b=>b[0]).filter(k=>g.odds[k]);const op=g.odds_open||{};const mine=myBooks();
+  const was=(b,mk,i)=>{const o=op[b]&&op[b][mk];if(!o)return '';const v=g.odds[b][mk];if(mk==='ml')return o[i]!==v[i]?'<span class="role">was '+am(o[i])+'</span>':'';
+    return o[0]!==v[0]?'<span class="role">was '+(mk==='sp'?signedLine(o[0]):fmt1(o[0]))+', '+shortDate(o[o.length-1])+'</span>':''};
+  let h='<details class="books"><summary>All '+bs.length+' books</summary><div class="tw"><table><tr><th>Book</th><th>'+g.away+'</th><th>'+g.home+'</th><th>'+g.home+' spread</th><th>Total, over/under</th></tr>';
+  for(const b of bs){const o=g.odds[b];
+    h+='<tr><td>'+(mine.includes(b)?'<b>'+bookTitle(b)+'</b>':bookTitle(b))+(b===REFB?'<span class="role">fair reference</span>':'')+'</td>'+
+      '<td class="num">'+(o.ml?am(o.ml[1])+was(b,'ml',1):'')+'</td><td class="num">'+(o.ml?am(o.ml[0])+was(b,'ml',0):'')+'</td>'+
+      '<td class="num">'+(o.sp?signedLine(o.sp[0])+' '+am(o.sp[1])+'/'+am(o.sp[3])+was(b,'sp'):'')+'</td>'+
+      '<td class="num">'+(o.to?fmt1(o.to[0])+' '+am(o.to[1])+'/'+am(o.to[3])+was(b,'to'):'')+'</td></tr>'}
+  return h+'</table></div><p class="muted note">Your books in bold (change them under Prices at your books). "Was" is where a book opened when this card first saw it.</p></details>'}
+// ---------- bet tracker ----------
+const KIND={ml:'Moneyline',sp:'Spread',to:'Total'};
+const money=x=>(x<0?'-$':'$')+Math.abs(x).toFixed(2);
+const smoney=x=>(x>0?'+':'')+money(x);
+const r4=x=>Math.round(x*10000)/10000;
+const Bets={mode:'local',list:store.get('bets',[]),col:null,note:'',loaded:false,
+  async init(){try{if(!window.claude||typeof window.claude.use!=='function')return;
+      const [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);if(!db||!user)return;
+      const uid=await user.id();if(!uid)return;
+      this.col=db.doc('data/users/'+uid+'/tracker').collection('bets');
+      this.col.onSnapshot(snap=>{this.mode='db';this.note='';this.list=snap.docs.map(d=>Object.assign({id:d.id},d.data()));renderBets();
+          if(!this.loaded&&!(snap.metadata&&snap.metadata.fromCache)){this.loaded=true;setTimeout(()=>this.afterLoad(),0)}},
+        ()=>{this.col=null;this.mode='local';this.list=store.get('bets',[]);this.note='Your saved bets could not be reached just now, so new bets are kept in this browser.';renderBets()})}catch(e){}},
+  async afterLoad(){const local=store.get('bets',[]);const all=[...this.list];   // bets saved in this browser before the account was reachable move to the account
+    if(local.length&&this.col){for(const b of local){try{await this.col.doc(b.id).set(b)}catch(e){return}if(!all.some(x=>x.id===b.id))all.push(b)}store.set('bets',[])}
+    gradeStored(all)},
+  local(){this.mode='local';this.col=null;this.list=store.get('bets',[])},
+  async add(b){if(this.mode==='db'&&this.col){try{await this.col.doc(b.id).set(b);return}catch(e){this.local();this.note='Saving to your account was refused here, so bets are kept in this browser.'}}
+    this.list.push(b);store.set('bets',this.list);renderBets();try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}},
+  async patch(id,p){if(this.mode==='db'&&this.col){try{await this.col.doc(id).update(p)}catch(e){}return}
+    const b=this.list.find(x=>x.id===id);if(b){Object.assign(b,p);store.set('bets',this.list);renderBets()}},
+  async remove(id){if(this.mode==='db'&&this.col){try{await this.col.doc(id).delete()}catch(e){}return}
+    this.list=this.list.filter(x=>x.id!==id);store.set('bets',this.list);renderBets()}};
+function betText(b,short){const t=short?(b.side==='home'?b.home:b.away):nm(b.side==='home'?b.home:b.away);
+  if(b.kind==='to')return (b.side==='over'?'Over ':'Under ')+fmt1(b.line)+' ('+am(b.price)+')';return b.kind==='ml'?t+' '+am(b.price):t+' '+signedLine(b.line)+' ('+am(b.price)+')'}
+// the closing numbers price the bet: its expected return had you bet at the close, and the points you gained on the line
+function closeValue(b,g){try{
+  if(b.kind==='ml'){if(!validMl(g.ml_home)||!validMl(g.ml_away))return{};const p=b.side==='home'?nv(g.ml_home,g.ml_away):nv(g.ml_away,g.ml_home);return{cev:r4(p*(decimal(b.price)-1)-(1-p)),cfair:fairAm(p)}}
+  if(!KY)return{};const sp=b.kind==='sp';const L=sp?g.spread_market:g.total_market;if(!has(L))return{};
+  const c0=(g.close&&g.close[b.kind])||[];const q=validMl(c0[0])&&validMl(c0[1])?vf(c0[0],c0[1]):0.5;
+  const c=solveCenter(sp?'m':'t',L,true,q);const [k,line,up]=sideSpec(b.kind,b.side,b.line);const r=wpl(k,c,line,up);
+  const cp=sp?(b.side==='home'?-L:L):L;return{cev:r4(r.w*(decimal(b.price)-1)-r.l),cpts:sp?b.line-cp:(b.side==='over'?cp-b.line:b.line-cp),cline:cp}}catch(e){return{}}}
+function gradeOf(b){if(b.graded)return b.graded;const g=DATA.games.find(x=>x.game_id===b.game_id);if(!g||!g.final)return null;
+  const m=g.home_score-g.away_score,t=g.home_score+g.away_score;
+  const d=b.kind==='ml'?(b.side==='home'?m:-m):(b.kind==='sp'?(b.side==='home'?m:-m)+b.line:(b.side==='over'?t-b.line:b.line-t));
+  const res=d>0?'W':(d<0?'L':'P');const profit=res==='W'?b.stake*(decimal(b.price)-1):(res==='L'?-b.stake:0);
+  return Object.assign({res,profit:Math.round(profit*100)/100,score:g.away+' '+g.away_score+', '+g.home+' '+g.home_score},closeValue(b,g))}
+function valueNow(b){const g=DATA.games.find(x=>x.game_id===b.game_id);if(!g||g.final||started(g))return null;
+  if(g.odds){const R=refOf(g);if(b.kind==='ml')return has(R.ml)?(b.side==='home'?R.ml:1-R.ml)*decimal(b.price)-1:null;
+    if(!has(R[b.kind]))return null;const [k,line,up]=sideSpec(b.kind,b.side,b.line);const r=wpl(k,R[b.kind],line,up);return r.w*(decimal(b.price)-1)-r.l}
+  if(b.kind==='ml'){if(g.pick_basis!=='market')return null;const p=b.side==='home'?g.p_pick_home:1-g.p_pick_home;return p*decimal(b.price)-1}
+  const L=b.kind==='sp'?g.spread_market:g.total_market;if(!KY||!has(L))return null;       // no prices by book: the market line, even money both ways
+  const c=solveCenter(b.kind==='sp'?'m':'t',L,true,0.5);const [k,line,up]=sideSpec(b.kind,b.side,b.line);const r=wpl(k,c,line,up);return r.w*(decimal(b.price)-1)-r.l}
+let grading=false;
+async function gradeStored(list){if(grading)return;grading=true;   // once per load: keep each result with the bet, so it survives into later seasons
+  for(const b of list||[...Bets.list]){if(b.graded)continue;const gr=gradeOf(b);if(gr)await Bets.patch(b.id,{graded:gr})}grading=false}
+function renderBets(){const el=document.getElementById('bets');if(!el)return;const L=[...Bets.list].sort((a,b)=>(b.t||'').localeCompare(a.t||''));
+  const rows=L.map(b=>({b,gr:gradeOf(b)}));const gd=rows.filter(r=>r.gr);const open=rows.filter(r=>!r.gr);
+  const W=gd.filter(r=>r.gr.res==='W').length,Lo=gd.filter(r=>r.gr.res==='L').length,Pu=gd.filter(r=>r.gr.res==='P').length;
+  const staked=gd.reduce((a,r)=>a+Number(r.b.stake),0),profit=gd.reduce((a,r)=>a+r.gr.profit,0);
+  const cv=gd.filter(r=>has(r.gr.cev));const cavg=cv.length?cv.reduce((a,r)=>a+r.gr.cev,0)/cv.length:null;const beat=cv.filter(r=>r.gr.cev>0).length;
+  let h='<div class="ph"><h3>Your bets</h3><button class="small" id="newbet">Log a bet</button></div>';
+  h+='<p class="muted note">'+(Bets.note?Bets.note:(Bets.mode==='db'?'Saved to your account; only you can see them.':'Saved on this device. Copy as text now and then as a backup; Import brings bets over from another copy of the card.'))+' Bets grade themselves from final scores. Each is also priced at the closing line, because beating the closing price is the best early sign that a way of betting will make money.</p>';
+  if(!L.length){el.innerHTML=h+'<p class="empty">No bets yet. Log one from a game on the card, from Prices at your books, or here.</p><div class="btns"><button class="small" id="importbets">Import</button></div>';bindBets(el);return}
+  h+='<div class="stat"><span>Record</span><span class="num">'+wl(W,Lo,Pu)+'</span></div>'+
+    '<div class="stat"><span>Profit</span><span class="num">'+smoney(profit)+(staked?' on '+money(staked)+' ('+signedPct(profit/staked)+')':'')+'</span></div>'+
+    '<div class="stat"><span>Value at closing prices</span><span class="num">'+(cavg===null?'—':signedPct(cavg)+' average, beat the close '+beat+' of '+cv.length)+'</span></div>'+
+    '<div class="stat"><span>Open</span><span class="num">'+open.length+(open.length?', '+money(open.reduce((a,r)=>a+Number(r.b.stake),0))+' at risk':'')+'</span></div>';
+  if(gd.length>1){h+='<div class="tw"><table><tr><th>Type</th><th>Record</th><th>Profit</th><th>Return</th><th>At close</th></tr>';
+    for(const k of ['ml','sp','to']){const q=gd.filter(r=>r.b.kind===k);if(!q.length)continue;const st=q.reduce((a,r)=>a+Number(r.b.stake),0),pf=q.reduce((a,r)=>a+r.gr.profit,0);const qc=q.filter(r=>has(r.gr.cev));
+      h+='<tr><td>'+KIND[k]+'</td><td class="num">'+wl(q.filter(r=>r.gr.res==='W').length,q.filter(r=>r.gr.res==='L').length,q.filter(r=>r.gr.res==='P').length)+'</td><td class="num">'+smoney(pf)+'</td><td class="num">'+(st?signedPct(pf/st):'—')+'</td><td class="num">'+(qc.length?signedPct(qc.reduce((a,r)=>a+r.gr.cev,0)/qc.length):'—')+'</td></tr>'}
+    h+='</table></div>'}
+  h+='<div class="betlist">';
+  for(const {b,gr} of rows){const g=DATA.games.find(x=>x.game_id===b.game_id);let st;
+    if(gr){st='<span class="flag '+(gr.res==='W'?'hit':(gr.res==='L'?'miss':''))+'">'+({W:'Won',L:'Lost',P:'Push'})[gr.res]+' '+smoney(gr.profit)+'</span>';
+      if(has(gr.cev))st+=' <span class="muted">'+(has(gr.cline)?'closed '+(b.kind==='to'?fmt1(gr.cline):signedLine(gr.cline)):(has(gr.cfair)?'fair '+am(gr.cfair)+' at the close':'closed'))+', worth '+signedPct(gr.cev)+' at closing prices</span>'}
+    else{const v=valueNow(b);st='<span class="flag">Open</span>'+(v===null?'':' <span class="muted">worth '+signedPct(v)+' at current prices</span>')}
+    h+='<div class="betrow"><div><b>'+betText(b)+'</b><div class="muted note">'+(b.season!==DATA.season?b.season+' ':'')+weekLabel(b.week)+', '+nm(b.away)+' at '+nm(b.home)+(b.book?', '+bookTitle(b.book):'')+(gr&&gr.score?'. '+gr.score:'')+'</div><div class="note">'+st+'</div></div>'+
+      '<div class="betamt num">'+money(Number(b.stake))+'<button class="x" aria-label="Delete this bet" data-delbet="'+b.id+'">×</button></div></div>'}
+  h+='</div><div class="btns"><button class="small" id="copybets">Copy as text</button><button class="small" id="importbets">Import</button></div>';
+  el.innerHTML=h;bindBets(el)}
+function bindBets(el){const nb=document.getElementById('newbet');if(nb)nb.onclick=()=>openBet({});
+  el.querySelectorAll('[data-delbet]').forEach(b=>b.onclick=()=>{const bet=Bets.list.find(x=>x.id===b.dataset.delbet);if(bet&&confirm('Delete '+betText(bet)+'?'))Bets.remove(bet.id)});
+  const cb=document.getElementById('copybets');if(cb)cb.onclick=()=>{const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+    const lines=[BET_COLS.join(',')].concat([...Bets.list].sort((a,b)=>(a.t||'').localeCompare(b.t||'')).map(b=>{const gr=gradeOf(b);
+      return [b.t?b.t.slice(0,10):'',b.season,b.week,b.away+' at '+b.home,betText(b,true),bookTitle(b.book||''),b.price,b.stake,gr?gr.res:'open',gr?gr.profit:'',gr&&has(gr.cev)?gr.cev:'',
+        b.id,b.t||'',b.game_id,b.kind,b.side,has(b.line)?b.line:'',b.book||''].map(q).join(',')}));
+    copyText(lines.join('\n'),cb,'Copy as text')};
+  const ib=document.getElementById('importbets');if(ib)ib.onclick=()=>{const d=document.getElementById('impdlg');document.getElementById('imp-text').value='';document.getElementById('imp-msg').textContent='';d.showModal?d.showModal():d.setAttribute('open','')}}
+// the first eleven columns are for reading; the rest let another copy of the card rebuild each bet exactly
+const BET_COLS=['logged','season','week','game','bet','book','price','stake','result','profit','value_at_close','id','saved_at','game_id','kind','side','line','book_key'];
+function parseCsv(txt){const rows=[];let row=[],f='',q=false;for(let i=0;i<txt.length;i++){const c=txt[i];
+    if(q){if(c==='"'){if(txt[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;else if(c===','){row.push(f);f=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&txt[i+1]==='\n')i++;row.push(f);f='';if(row.some(x=>x!==''))rows.push(row);row=[]}else f+=c}
+  row.push(f);if(row.some(x=>x!==''))rows.push(row);return rows}
+async function importBets(txt){const rows=parseCsv(txt.trim());if(rows.length<2)return 'Nothing to import: paste the whole text, including its first line.';
+  const H=rows[0].map(x=>x.trim());const ix=k=>H.indexOf(k);const need=['id','game_id','kind','side','price','stake'];
+  if(need.some(k=>ix(k)<0))return 'That text is missing columns this card needs. Use Copy as text from the Bets tab of the other card.';
+  const have=new Set(Bets.list.map(b=>b.id));let added=0,skipped=0;
+  for(const r of rows.slice(1)){const v=k=>ix(k)<0?'':(r[ix(k)]||'').trim();const id=v('id');if(!id||have.has(id)){skipped++;continue}
+    const kind=v('kind'),side=v('side');if(!['ml','sp','to'].includes(kind)||!['home','away','over','under'].includes(side)){skipped++;continue}
+    const g=DATA.games.find(x=>x.game_id===v('game_id'));const game=v('game').split(' at ');
+    const b={id,t:v('saved_at')||(v('logged')?v('logged')+'T12:00:00Z':new Date().toISOString()),season:Number(v('season'))||DATA.season,week:Number(v('week'))||(g?g.week:0),
+      game_id:v('game_id'),away:g?g.away:(game[0]||''),home:g?g.home:(game[1]||''),kind,side,line:kind==='ml'||v('line')===''?null:Number(v('line')),price:Number(v('price')),stake:Number(v('stake')),book:v('book_key')||'other'};
+    if(!validMl(b.price)||!(b.stake>0)||(kind!=='ml'&&!isFinite(b.line))){skipped++;continue}
+    const res=v('result');if(['W','L','P'].includes(res)&&!(g&&g.final))b.graded=Object.assign({res,profit:Number(v('profit'))||0},v('value_at_close')!==''?{cev:Number(v('value_at_close'))}:{});
+    await Bets.add(b);have.add(id);added++}
+  return 'Imported '+added+' bet'+(added===1?'':'s')+(skipped?'; skipped '+skipped+' already here or unreadable':'')+'.'}
+function copyText(txt,btn,label){const done=()=>{btn.textContent='Copied';setTimeout(()=>btn.textContent=label,1500)};
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}document.body.removeChild(ta)};
+  try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,fallback);else fallback()}catch(e){fallback()}}
+// ---------- log-a-bet dialog ----------
+const F={};
+function betGames(){const w=DATA.current_week;return DATA.games.filter(g=>!g.final&&g.week<=w+1).sort((a,b)=>a.kickoff.localeCompare(b.kickoff))}
+function bookChoices(g){const have=g&&g.odds?ALLBOOKS.map(b=>b[0]).filter(k=>g.odds[k]):[];
+  if(have.length){const mine=myBooks().filter(k=>have.includes(k));return mine.concat(have.filter(k=>!mine.includes(k)))}
+  const mine=(S.books&&S.books.length?S.books:DEFAULT_BOOKS);return mine.concat(DEFAULT_BOOKS.filter(k=>!mine.includes(k)))}
+function openBet(pre){const dlg=document.getElementById('betdlg');const gs=betGames();if(!gs.length&&!pre.game_id){alert('No games left to bet on in this card.');return}
+  F.game_id=pre.game_id||((gs.find(g=>!started(g))||gs[0])||{}).game_id;F.kind=pre.kind||'ml';F.side=pre.side||null;F.book=pre.book||null;
+  const sel=document.getElementById('bf-game');const list=gs.some(g=>g.game_id===F.game_id)?gs:[DATA.games.find(g=>g.game_id===F.game_id)].concat(gs);
+  sel.innerHTML=list.map(g=>'<option value="'+g.game_id+'">'+g.away+' at '+g.home+', '+kick(g.kickoff).replace(' ET','')+(started(g)?' (started)':'')+'</option>').join('');sel.value=F.game_id;
+  document.getElementById('bf-stake').value=S.stake||'';
+  fillBet(pre.price);dlg.showModal?dlg.showModal():dlg.setAttribute('open','')}
+function fillBet(price){const g=DATA.games.find(x=>x.game_id===F.game_id);if(!g)return;
+  if(F.kind==='to'){if(F.side!=='over'&&F.side!=='under')F.side='over'}else if(F.side!=='home'&&F.side!=='away')F.side=pickOf(g).home?'home':'away';
+  document.querySelectorAll('#bf-kind button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===F.kind)));
+  const sides=F.kind==='to'?[['over','Over'],['under','Under']]:[['away',nm(g.away)],['home',nm(g.home)]];
+  const sb=document.getElementById('bf-side');sb.innerHTML=sides.map(s=>'<button type="button" data-v="'+s[0]+'" aria-pressed="'+(s[0]===F.side)+'">'+s[1]+'</button>').join('');
+  sb.querySelectorAll('button').forEach(b=>b.onclick=()=>{F.side=b.dataset.v;fillBet()});
+  const bk=document.getElementById('bf-book');const opts=bookChoices(g);
+  if(!F.book||(F.book!=='other'&&!opts.includes(F.book))){const bo=g.odds?bestOffer(g,F.kind,F.side):null;const last=store.get('lastbook',null);F.book=bo?bo.book:(opts.includes(last)?last:(opts[0]||'other'))}
+  bk.innerHTML=opts.map(k=>'<option value="'+k+'">'+bookTitle(k)+'</option>').join('')+'<option value="other">Other book</option>';bk.value=F.book;
+  let line=null,pr=null;const v=g.odds&&g.odds[F.book]&&g.odds[F.book][F.kind];
+  if(v){if(F.kind==='ml')pr=F.side==='home'?v[0]:v[1];else{const a=F.side==='home'||F.side==='over';line=a?v[0]:v[2];pr=a?v[1]:v[3]}}
+  else{if(F.kind==='ml'){const x=F.side==='home'?g.ml_home:g.ml_away;pr=validMl(x)?x:null}
+    else if(F.kind==='sp'){if(has(g.spread_market))line=F.side==='home'?-g.spread_market:g.spread_market;pr=-110}
+    else{if(has(g.total_market))line=g.total_market;pr=-110}}
+  const li=document.getElementById('bf-line');li.disabled=F.kind==='ml';li.value=F.kind==='ml'?'':(has(line)?line:'');
+  document.getElementById('bf-price').value=has(price)?price:(has(pr)?pr:'');checkBet()}
+function formBet(){const g=DATA.games.find(x=>x.game_id===F.game_id);const line=F.kind==='ml'?null:Number(document.getElementById('bf-line').value);
+  return{g,line,price:Number(document.getElementById('bf-price').value),stake:Number(document.getElementById('bf-stake').value)}}
+function checkBet(){const el=document.getElementById('bf-check');const {g,line,price}=formBet();el.className='verdict';
+  if(!g||!validMl(price)||(F.kind!=='ml'&&!isFinite(line))){el.textContent='Enter the price'+(F.kind==='ml'?'':' and line')+' you are getting.';return}
+  let p=null,pu=0,src='';const R=g.odds?refOf(g):{};
+  if(F.kind==='ml'){if(has(R.ml)){p=F.side==='home'?R.ml:1-R.ml;src=R.mlSrc===REFB?bookTitle(REFB):'the median book'}else if(g.pick_basis==='market'){p=F.side==='home'?g.p_pick_home:1-g.p_pick_home;src='the market'}}
+  else if(KY){let c=has(R[F.kind])?R[F.kind]:null;src=has(c)?(R[F.kind+'Src']===REFB?bookTitle(REFB):'the median book'):'the market line';
+    const L=F.kind==='sp'?g.spread_market:g.total_market;if(!has(c)&&has(L))c=solveCenter(F.kind==='sp'?'m':'t',L,true,0.5);
+    if(has(c)){const [k,ln,up]=sideSpec(F.kind,F.side,line);const r=wpl(k,c,ln,up);p=r.w;pu=r.p}}
+  if(p===null){el.textContent='No market price yet to compare against.';return}
+  const ev=p*(decimal(price)-1)-(1-p-pu);const pn=p/(1-pu);
+  el.className='verdict '+(ev>0.005?'pos':(ev<-0.005?'neg':''));
+  el.textContent='Fair at this number '+am(fairAm(pn))+' (from '+src+'). At '+am(price)+' that is '+signedPct(ev)+' per dollar'+(pu>0.005?', with a '+pct(pu)+' chance of a push':'')+'.'}
+function setupBetDialog(){const dlg=document.getElementById('betdlg');
+  document.getElementById('bf-game').onchange=e=>{F.game_id=e.target.value;F.book=null;fillBet()};
+  document.querySelectorAll('#bf-kind button').forEach(b=>b.onclick=()=>{F.kind=b.dataset.v;F.book=null;fillBet()});
+  document.getElementById('bf-book').onchange=e=>{F.book=e.target.value;fillBet()};
+  ['bf-line','bf-price','bf-stake'].forEach(id=>document.getElementById(id).oninput=checkBet);
+  document.getElementById('bf-cancel').onclick=()=>dlg.close?dlg.close():dlg.removeAttribute('open');
+  document.getElementById('betform').onsubmit=async e=>{e.preventDefault();const {g,line,price,stake}=formBet();const msg=document.getElementById('bf-check');
+    if(!g||!validMl(price)){msg.className='verdict neg';msg.textContent='Enter the price as American odds, like -110 or +145.';return}
+    if(F.kind!=='ml'&&!isFinite(line)){msg.className='verdict neg';msg.textContent='Enter the line.';return}
+    if(!(stake>0)){msg.className='verdict neg';msg.textContent='Enter how much you bet.';return}
+    const b={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),t:new Date().toISOString(),season:DATA.season,week:g.week,game_id:g.game_id,away:g.away,home:g.home,
+      kind:F.kind,side:F.side,line:F.kind==='ml'?null:line,price,stake,book:F.book||'other'};
+    S.stake=stake;store.set('stake',stake);store.set('lastbook',b.book);await Bets.add(b);dlg.close?dlg.close():dlg.removeAttribute('open');toast('Saved. See the Bets tab.')}}
+function setupImport(){const d=document.getElementById('impdlg');
+  document.getElementById('imp-cancel').onclick=()=>d.close?d.close():d.removeAttribute('open');
+  document.getElementById('impform').onsubmit=async e=>{e.preventDefault();const msg=document.getElementById('imp-msg');msg.textContent='Importing…';
+    const out=await importBets(document.getElementById('imp-text').value);msg.textContent=out;if(out.indexOf('Imported')===0&&out.indexOf('Imported 0')!==0){setTimeout(()=>{d.close?d.close():d.removeAttribute('open');toast(out)},600)}}}
+function toast(t){const d=document.getElementById('toast');d.textContent=t;d.classList.add('on');setTimeout(()=>d.classList.remove('on'),2200)}
+// ---------- render ----------
+function renderWeeks(){const wks=[...new Set(DATA.games.map(g=>g.week))].sort((a,b)=>a-b);const el=document.getElementById('weeks');el.innerHTML='';
+  for(const w of wks){const b=document.createElement('button');const done=DATA.games.filter(g=>g.week===w).every(g=>g.final);
+    b.className='wk'+(w===S.week?' on':'')+(done?' done':'');b.textContent=w<=18?'Wk '+w:({19:'WC',20:'Div',21:'Conf',22:'SB'})[w];b.onclick=()=>{S.week=w;S.open=null;renderCard();renderWeeks()};el.appendChild(b)}}
+function pickCell(g){const k=pickOf(g);const w=Math.max(0,Math.min(1,(k.p-0.5)/0.5));const res=pickResult(g);let flags='';
+  if(res!==null)flags+='<span class="flag '+(res?'hit':'miss')+'">'+(res?'Won':'Lost')+'</span>';
+  if(k.basis==='model')flags+='<span class="flag">No line yet</span>';
+  else if(k.toss)flags+='<span class="flag">Toss-up</span>';
+  if(k.disagree)flags+='<span class="flag warn">Ratings like '+nm(k.modelTeam)+'</span>';
+  if(!g.final&&g.odds){const b=bestOffer(g,'ml',k.home?'home':'away');if(b&&b.ev>0)flags+='<span class="flag hit">'+bookTitle(b.book)+' '+am(b.price)+' beats fair</span>'}
+  return '<div class="pk'+(k.toss?' toss':'')+(g.final?' done':'')+'"><span class="tm">'+sw(k.team)+nm(k.team)+'</span><span class="pc num">'+pct0(k.p)+'</span><span class="op">'+(k.home?'vs ':'at ')+nm(k.opp)+'</span><span class="fp num">fair '+am(k.fair)+'</span><span class="cb"><i style="width:'+(w*100).toFixed(0)+'%"></i></span>'+(flags?'<span class="fl">'+flags+'</span>':'')+'</div>'}
+function leansText(picks,spreads,totals){const L=['NFL model card, '+weekLabel(S.week),'','Winner picks (market favorite, win chance, fair price)'];
+  for(const g of picks){const k=pickOf(g);L.push(nm(k.team)+(k.home?' vs ':' at ')+nm(k.opp)+': '+pct0(k.p)+', fair '+am(k.fair)+(k.basis==='model'?' (no line yet, model only)':'')+(k.toss?' (toss-up)':'')+(k.disagree?' (ratings like '+nm(k.modelTeam)+')':''))}
+  L.push('','Spreads, model 2+ points off the line');if(!spreads.length)L.push('none');for(const r of spreads)L.push(r.e.text+' ('+nm(r.g.away)+' at '+nm(r.g.home)+'): model '+teamSpread(r.g.spread_model,r.g.home,r.g.away)+', calibrated '+pct(r.e.cal));
+  L.push('','Totals, model 2+ points off the line');if(!totals.length)L.push('none');for(const r of totals)L.push(r.e.text+' ('+nm(r.g.away)+' at '+nm(r.g.home)+'): model '+fmt1(r.g.total_model)+', calibrated '+pct(r.e.cal));
+  L.push('','Bet a side only at a price better than fair. The favorite won '+pct(rate(TEST.su_market))+' of 2021-2025 games; the model alone '+pct(rate(TEST.su_model))+'.');return L.join('\n')}
+function renderLeans(rows){const el=document.getElementById('leans');const open=rows.filter(r=>!r.g.final);
+  const picks=rows.map(r=>r.g).sort((a,b)=>(a.final?1:0)-(b.final?1:0)||b.p_winner-a.p_winner);
+  const spreads=open.filter(r=>r.e.spread&&Math.abs(r.e.spread.gap)>=2).map(r=>({g:r.g,e:r.e.spread})).sort((a,b)=>Math.abs(b.e.gap)-Math.abs(a.e.gap));
+  const totals=open.filter(r=>r.e.total&&Math.abs(r.e.total.gap)>=2).map(r=>({g:r.g,e:r.e.total})).sort((a,b)=>Math.abs(b.e.gap)-Math.abs(a.e.gap));
+  const anyLine=rows.some(r=>r.g.pick_basis==='market');
+  let h='<div class="ph"><h3>Winner picks</h3><button class="small" id="copyleans">Copy</button></div>';
+  h+='<p class="muted note">'+(anyLine?'Each pick is the betting market\'s favorite and its chance to win, with the book\'s cut removed. Fair price is what a moneyline bet is worth at that chance: a price better than fair is worth taking, anything worse loses over time. Favorites won '+pct(rate(TEST.su_market))+' of held-out 2021–25 games; the model on its own, '+pct(rate(TEST.su_model))+'.':'No lines are posted for this week yet, so these are the model\'s own picks and fair prices. On held-out seasons the model alone was right '+pct(rate(TEST.su_model))+' of the time.')+'</p>';
+  h+='<div class="pgrid">'+picks.map(pickCell).join('')+'</div>';
+  h+=pricesHtml(rows);
+  if(open.length&&open.some(r=>has(r.g.spread_market)||has(r.g.total_market))){
+    const row=(r,kind)=>{const [cls,lab]=tier(r.e.gap);let best='';
+      if(r.g.odds){const b=bestOffer(r.g,kind==='s'?'sp':'to',kind==='s'?(r.e.homeSide?'home':'away'):(r.e.overSide?'over':'under'));if(b)best=' Best at your books: '+(kind==='s'?signedLine(b.point):fmt1(b.point))+' '+am(b.price)+', '+bookTitle(b.book)+'.'}
+      return '<div class="lrow"><span class="tier '+cls+'">'+lab+'</span><b>'+r.e.text+'</b><span class="why">'+nm(r.g.away)+' at '+nm(r.g.home)+'. Model '+(kind==='s'?teamSpread(r.g.spread_model,r.g.home,r.g.away):fmt1(r.g.total_model))+', '+signed(r.e.gap)+' off the market. Calibrated '+pct(r.e.cal)+', edge '+signedPct(r.e.edge)+'.'+best+'</span></div>'};
+    h+='<h3>Against the line</h3><h4>Spreads</h4>'+(spreads.length?spreads.map(r=>row(r,'s')).join(''):'<p class="empty">No spread sits 2 or more points from the market this week.</p>');
+    h+='<h4>Totals</h4>'+(totals.length?totals.map(r=>row(r,'t')).join(''):'<p class="empty">No total sits 2 or more points from the market this week.</p>');
+    h+='<p class="muted note">Strong lean is 4+ points from the market, lean is 2 to 4. The calibrated rate is how often that size of disagreement has covered on held-out games; below 52.4% it loses money at -110.</p>'}
+  el.innerHTML=h;
+  bindPrices(el);
+  const btn=document.getElementById('copyleans');btn.onclick=()=>{const txt=leansText(picks.filter(g=>!g.final),spreads,totals);const done=()=>{btn.textContent='Copied';setTimeout(()=>btn.textContent='Copy',1500)};
+    const fallback=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}document.body.removeChild(ta)};
+    try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,fallback);else fallback()}catch(e){fallback()}}}
+function renderCard(){const gs=DATA.games.filter(g=>g.week===S.week);const rows=gs.map(g=>({g,e:edges(g)}));
+  rows.sort((x,y)=>(x.g.final?1:0)-(y.g.final?1:0)||y.e.best-x.e.best);
+  document.getElementById('wkname').textContent=weekLabel(S.week);const open=rows.filter(r=>!r.g.final).length;
+  const won=rows.filter(r=>pickResult(r.g)===true).length,lost=rows.filter(r=>pickResult(r.g)===false).length;
+  document.getElementById('wkdates').textContent=dateRange(gs)+'. '+(open?open+' of '+gs.length+' games still to play.':'All '+gs.length+' games final.')+(won+lost?' Winner picks '+won+'-'+lost+' so far.':'');
+  renderLeans(rows);
+  const injNote=open&&!(DATA.inj_status.weeks||[]).includes(S.week)?' This week\'s injury reports are not out yet; build again after Friday\'s final reports for injury-adjusted numbers.':'';
+  document.getElementById('cardnote').textContent=(open?'Every game, biggest disagreement with the market first. Tap one for what drives the number, the outcome range, your book\'s line and parlay legs.':'Results, and how the picks did.')+injNote;
+  const el=document.getElementById('games');el.innerHTML='';
+  for(const {g,e} of rows){const d=document.createElement('div');d.className='game'+(S.open===g.game_id?' open':'');const mk=g.spread_market;const pj=proj(g);const k=pickOf(g);
+    let leanHtml='',tags='';
+    if(g.final){const m=g.home_score-g.away_score;const res=pickResult(g);tags+='<span class="tag final">Final: '+nm(g.away)+' '+g.away_score+', '+nm(g.home)+' '+g.home_score+'</span>';
+      if(res!==null)tags+='<span class="tag '+(res?'ok':'warn')+'">Pick '+nm(k.team)+(res?' won':' lost')+'</span>';
+      if(has(mk)&&Math.abs(g.spread_model-mk)>=0.5){const side=g.spread_model>mk?g.home:g.away;const cov=g.spread_model>mk?m>mk:m<mk;tags+='<span class="tag '+(m===mk?'':(cov?'ok':'warn'))+'">Model side '+side+(m===mk?' pushed':(cov?' covered':' lost'))+'</span>'}
+      if(has(g.total_market)&&Math.abs(g.total_model-g.total_market)>=0.5){const t=g.home_score+g.away_score;const ov=g.total_model>g.total_market;const hit=ov?t>g.total_market:t<g.total_market;tags+='<span class="tag '+(t===g.total_market?'':(hit?'ok':'warn'))+'">'+(ov?'Over':'Under')+(t===g.total_market?' pushed':(hit?' hit':' missed'))+'</span>'}}
+    else{if(e.spread){const [cls,lab]=tier(e.spread.gap);leanHtml+='<div class="leanline"><span class="tier '+cls+'">'+lab+'</span><b>'+e.spread.text+'</b><span class="why">calibrated '+pct(e.spread.cal)+', edge '+signedPct(e.spread.edge)+'</span></div>'}
+      if(e.total){const [cls,lab]=tier(e.total.gap);leanHtml+='<div class="leanline"><span class="tier '+cls+'">'+lab+'</span><b>'+e.total.text+'</b><span class="why">calibrated '+pct(e.total.cal)+', edge '+signedPct(e.total.edge)+'</span></div>'}
+      if(k.disagree)tags+='<span class="tag qb">Ratings alone pick '+nm(k.modelTeam)+' ('+pct0(k.pModel)+')</span>'}
+    tags+=qbTags(g)+injTag(g,'away')+injTag(g,'home')+wxTag(g)+moveTag(g);
+    d.innerHTML='<div class="g1"><div><div class="teams">'+sw(g.away)+nm(g.away)+'<span class="at">at</span>'+sw(g.home)+nm(g.home)+'</div><div class="when">'+kick(g.kickoff)+(g.neutral?', neutral site':'')+(g.dome?', indoors':'')+'</div><div class="when">Projected '+g.away+' '+pj.away+', '+g.home+' '+pj.home+'</div></div>'+
+      '<div class="proj">pick'+(k.basis==='model'?', no line yet':'')+'<b class="num">'+nm(k.team)+' '+pct0(k.p)+'</b>fair '+am(k.fair)+'</div></div>'+
+      '<div class="lines"><span class="hd"></span><span class="hd r">Model</span><span class="hd"></span><span class="hd r">Market</span>'+
+      '<span class="lb">Spread</span><span class="m num">'+teamSpread(g.spread_model,g.home,g.away)+'</span>'+gapHtml(g.spread_model,mk)+'<span class="k num">'+teamSpread(mk,g.home,g.away)+'</span>'+
+      '<span class="lb">Total</span><span class="m num">'+fmt1(g.total_model)+'</span>'+gapHtml(g.total_model,g.total_market)+'<span class="k num">'+(has(g.total_market)?fmt1(g.total_market):'—')+'</span></div>'+
+      leanHtml+'<div class="tags">'+tags+'</div><div class="detail" id="det-'+g.game_id+'"></div>';
+    const toggle=()=>{S.open=S.open===g.game_id?null:g.game_id;renderCard()};
+    d.querySelector('.g1').onclick=toggle;d.querySelector('.lines').onclick=toggle;
+    el.appendChild(d);if(S.open===g.game_id)renderDetail(g)}}
+function mlVerdict(g,side){const u=S.lines[g.game_id]||{};const price=side==='home'?u.mlh:u.mla;if(!validMl(price))return '';
+  const p=side==='home'?g.p_pick_home:1-g.p_pick_home;const team=side==='home'?g.home:g.away;const ev=p*mlProfit(price)-(1-p);const kk=kelly(p,price);
+  return '<div class="verdict '+(ev>0.005?'pos':(ev<-0.005?'neg':''))+'"><b>'+nm(team)+' '+am(price)+'</b>: wins '+pct(p)+' of the time, fair '+am(side==='home'?g.fair_home:g.fair_away)+'. Expected return '+signedPct(ev)+' per dollar. '+(ev>0?'Quarter-Kelly stake '+pct(kk)+' of bankroll, about $'+Math.round(kk*S.bankroll)+'.':'Worse than fair: skip it.')+(ev>0?' <button class="small" data-logml="'+side+'|'+price+'">Log this bet</button>':'')+'</div>'}
+function mlHtml(g){const u=S.lines[g.game_id]||{};const src=g.pick_basis==='market'?'Market chance to win, cut removed':'Model chance to win (no line posted yet)';
+  const side=(sd)=>{const team=sd==='home'?g.home:g.away;const p=sd==='home'?g.p_pick_home:1-g.p_pick_home;const fair=sd==='home'?g.fair_home:g.fair_away;const now=sd==='home'?g.ml_home:g.ml_away;const id='in-ml'+sd[0]+'-'+g.game_id;const bo=g.odds?bestOffer(g,'ml',sd):null;
+    return '<div class="mlside"><b>'+sw(team)+nm(team)+'</b><span>'+pct(p)+' to win</span><span class="fair num">fair '+am(fair)+'</span><span class="muted">'+(bo?'best at your books '+am(bo.price)+', '+bookTitle(bo.book):'market now '+am(now))+'</span><label for="'+id+'">Your price</label><input id="'+id+'" type="number" step="5" value="'+((sd==='home'?u.mlh:u.mla)||'')+'" placeholder="'+(bo?am(bo.price):(has(now)?am(now):'-110'))+'" data-k="'+(sd==='home'?'mlh':'mla')+'"></div>'};
+  return '<h4>Moneyline check</h4><div class="sub4">'+src+'. Type a price you\'re offered, a boost or your book\'s, to see what it\'s worth.</div><div class="mlgrid">'+side('away')+side('home')+'</div>'+mlVerdict(g,'away')+mlVerdict(g,'home')}
+function renderDetail(g){const el=document.getElementById('det-'+g.game_id);const L=gameLines(g);const e=edges(g);const u=S.lines[g.game_id]||{};const k=pickOf(g);
+  let h=(g.final?'':mlHtml(g)+pricesTable(g)+'<div class="btns"><button class="small" data-logbet="1">Log a bet</button></div>')+injHtml(g)+'<h4>What moves the spread</h4><div class="sub4">Points toward each team, relative to an average matchup. Model: '+teamSpread(g.spread_model,g.home,g.away)+'.</div>'+
+    factorHtml(g.factors,DATA.model.intercept_margin,g.spread_model,g.home,g.away,'Typical home edge',g.home+' +'+fmt1(DATA.model.intercept_margin))+
+    '<h4>What moves the total</h4><div class="sub4">Points added or taken away from an average game. Model: '+fmt1(g.total_model)+'.</div>'+
+    factorHtml(g.factors_total,DATA.model.intercept_total,g.total_model,'Over','Under','Average game',fmt1(DATA.model.intercept_total));
+  h+='<h4>Where the outcomes fall: '+nm(g.home)+' margin</h4>'+distChart(g.spread_model,e.spread?e.spread.line:null,RM,[-7,-3,0,3,7],'margin distribution')+
+    '<h4>Total points</h4>'+distChart(g.total_model,e.total?e.total.line:null,RT,[Math.round(g.total_model/7)*7-7,Math.round(g.total_model/7)*7,Math.round(g.total_model/7)*7+7],'total distribution');
+  h+='<h4>Pieces of the number</h4><div class="kv"><span>Full model (used)</span><span class="num">'+teamSpread(g.spread_model,g.home,g.away)+'</span><span>Ratings-only blend</span><span class="num">'+teamSpread(g.spread_blend,g.home,g.away)+'</span><span>Elo alone</span><span class="num">'+teamSpread(g.spread_elo,g.home,g.away)+'</span><span>EPA alone</span><span class="num">'+teamSpread(g.spread_epa,g.home,g.away)+'</span>'+
+    '<span>Winner, market</span><span class="num">'+(k.basis==='market'?nm(g.winner)+' '+pct(g.p_winner):'no line yet')+'</span><span>Winner, model alone</span><span class="num">'+nm(g.model_winner)+' '+pct(g.p_model_winner)+'</span>'+
+    (g.wx&&!g.wx.indoor&&has(g.wx.wind)?'<span>Weather'+(g.wx.src==='forecast'?' forecast':'')+'</span><span class="num">'+g.wx.wind+' mph, '+g.wx.temp+'°F</span>':'')+
+    '<span>Elo ratings</span><span class="num">'+g.away+' '+g.elo_away+', '+g.home+' '+g.elo_home+'</span>'+(g.rest_diff?'<span>Rest edge</span><span class="num">'+(g.rest_diff>0?g.home:g.away)+' by '+Math.abs(g.rest_diff)+(Math.abs(g.rest_diff)===1?' day':' days')+'</span>':'')+
+    (g.bc_early?'<span>Body clock</span><span>'+g.away+' west-to-east early kick</span>':'')+(g.bc_late?'<span>Body clock</span><span>'+g.away+' east team, late west kick</span>':'')+'</div>';
+  if(!g.final){
+    h+='<h4>Your book\'s numbers (home line, positive means home favored)</h4><div class="inrow"><div><label for="in-s-'+g.game_id+'">Spread</label><input id="in-s-'+g.game_id+'" type="number" step="0.5" value="'+(L.userSpread?L.spread:'')+'" placeholder="'+(has(g.spread_market)?g.spread_market:'')+'" data-k="spread"></div><div><label for="in-sp-'+g.game_id+'">Price</label><input id="in-sp-'+g.game_id+'" type="number" step="5" value="'+(u.sp||'')+'" placeholder="-110" data-k="sp"></div><div></div>'+
+      '<div><label for="in-t-'+g.game_id+'">Total</label><input id="in-t-'+g.game_id+'" type="number" step="0.5" inputmode="decimal" value="'+(L.userTotal?L.total:'')+'" placeholder="'+(has(g.total_market)?g.total_market:'')+'" data-k="total"></div><div><label for="in-tp-'+g.game_id+'">Price</label><input id="in-tp-'+g.game_id+'" type="number" step="5" value="'+(u.tp||'')+'" placeholder="-110" data-k="tp"></div><div></div></div>';
+    if(e.spread){const kk=kelly(e.spread.cal,e.spread.price);
+      h+='<div class="verdict '+(e.spread.edge>0.01?'pos':(e.spread.edge<-0.01?'neg':''))+'"><b>'+e.spread.text+'</b> at '+e.spread.price+'. Model-implied '+pct(e.spread.p)+' to cover'+(e.spread.push>0.005?' ('+pct(e.spread.push)+' push)':'')+'; calibrated against the market '+pct(e.spread.cal)+'; break-even '+pct(impliedProb(e.spread.price))+'; edge '+signedPct(e.spread.edge)+'. Quarter-Kelly stake '+(kk>0?pct(kk)+' of bankroll, about $'+Math.round(kk*S.bankroll):'none')+'.</div>'}
+    if(e.total){const kk=kelly(e.total.cal,e.total.price);
+      h+='<div class="verdict '+(e.total.edge>0.01?'pos':(e.total.edge<-0.01?'neg':''))+'"><b>'+e.total.text+'</b> at '+e.total.price+'. Model-implied '+pct(e.total.p)+(e.total.push>0.005?' ('+pct(e.total.push)+' push)':'')+'; calibrated against the market '+pct(e.total.cal)+'; break-even '+pct(impliedProb(e.total.price))+'; edge '+signedPct(e.total.edge)+'. Quarter-Kelly stake '+(kk>0?pct(kk)+' of bankroll, about $'+Math.round(kk*S.bankroll):'none')+'.</div>'}
+    if(e.spread){h+='<h4>Line shopping, spread: calibrated cover rate by number</h4><div class="tw"><table><tr><th>Home line</th><th>'+g.home+'</th><th>'+g.away+'</th><th>Push</th></tr>';
+      for(let d=-1.5;d<=1.5;d+=0.5){const ln=e.spread.line+d;const pr=coverProb(g.spread_model,ln);const ch=calSpread(g.spread_model,ln);h+='<tr'+(d===0?' class="hi"':'')+'><td class="num">'+signedLine(ln)+'</td><td class="num">'+pct(ch)+'</td><td class="num">'+pct(1-ch)+'</td><td class="num">'+pct(pr.push)+'</td></tr>'}h+='</table></div>'}
+    if(e.total){h+='<h4>Line shopping, total: calibrated over and under rate by number</h4><div class="tw"><table><tr><th>Total</th><th>Over</th><th>Under</th><th>Push</th></tr>';
+      for(let d=-2;d<=2;d+=0.5){const ln=e.total.line+d;const pr=overProb(g.total_model,ln);const co=calTotal(g.total_model,ln);h+='<tr'+(d===0?' class="hi"':'')+'><td class="num">'+fmt1(ln)+'</td><td class="num">'+pct(co)+'</td><td class="num">'+pct(1-co)+'</td><td class="num">'+pct(pr.push)+'</td></tr>'}h+='</table></div>'}
+    h+='<div class="btns">';
+    if(e.spread)h+='<button class="small" data-leg="spread:home">Add '+g.home+' '+signedLine(-e.spread.line)+'</button><button class="small" data-leg="spread:away">Add '+g.away+' '+signedLine(e.spread.line)+'</button>';
+    if(e.total)h+='<button class="small" data-leg="total:over">Add Over '+fmt1(e.total.line)+'</button><button class="small" data-leg="total:under">Add Under '+fmt1(e.total.line)+'</button>';
+    h+='</div>'}
+  el.innerHTML=h;
+  el.querySelectorAll('input').forEach(inp=>{inp.oninput=()=>{const uu=S.lines[g.game_id]||{};uu[inp.dataset.k]=inp.value;S.lines[g.game_id]=uu;store.set('lines',S.lines);
+    const kk=inp.dataset.k,pos=inp.selectionStart;renderCard();const n=document.querySelector('#det-'+g.game_id+' input[data-k="'+kk+'"]');if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}}}});
+  el.querySelectorAll('[data-logbet]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();const k=pickOf(g);const bo=g.odds?bestOffer(g,'ml',k.home?'home':'away'):null;openBet({game_id:g.game_id,kind:'ml',side:k.home?'home':'away',book:bo?bo.book:null})});
+  el.querySelectorAll('[data-logml]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();const [side,price]=b.dataset.logml.split('|');openBet({game_id:g.game_id,kind:'ml',side,price:Number(price),book:'other'})});
+  el.querySelectorAll('button[data-leg]').forEach(b=>{b.onclick=ev=>{ev.stopPropagation();const [type,side]=b.dataset.leg.split(':');const LL=gameLines(g);
+    S.legs=S.legs.filter(l=>!(l.game_id===g.game_id&&l.type===type));
+    S.legs.push({game_id:g.game_id,type,side,line:type==='spread'?LL.spread:LL.total,price:type==='spread'?LL.sPrice:LL.tPrice,label:g.away+' at '+g.home+': '+(type==='spread'?(side==='home'?g.home+' '+signedLine(-LL.spread):g.away+' '+signedLine(LL.spread)):(side==='over'?'Over ':'Under ')+fmt1(LL.total))});
+    store.set('legs',S.legs);b.textContent='Added';renderParlay()}})}
+function renderParlay(){const el=document.getElementById('parlay');
+  const legs=S.legs.filter(l=>DATA.games.some(x=>x.game_id===l.game_id));
+  if(!legs.length){el.innerHTML='<h3>Parlay check</h3><p class="empty">No legs yet. Open a game on the card and add a side or total. Legs from the same game are priced with their real correlation in the model-implied number; the expectation uses calibrated probabilities.</p>';return}
+  const byGame={};for(const l of legs){(byGame[l.game_id]=byGame[l.game_id]||[]).push(l)}
+  let p=1;const parts=[];
+  for(const gid in byGame){const g=DATA.games.find(x=>x.game_id===gid);const lg=byGame[gid].map(l=>({type:l.type,side:l.side,line:l.line,pred:l.type==='spread'?g.spread_model:g.total_model}));const pg=jointProb(lg);p*=pg;
+    const indep=lg.reduce((a,l)=>{const pr=l.type==='spread'?coverProb(l.pred,l.line):overProb(l.pred,l.line);const w=noPush(pr);return a*((l.side==='home'||l.side==='over')?w:1-w)},1);parts.push({legs:byGame[gid],pg,indep})}
+  const pc=legs.reduce((a,l)=>{const g=DATA.games.find(x=>x.game_id===l.game_id);const c=l.type==='spread'?calSpread(g.spread_model,l.line):calTotal(g.total_model,l.line);return a*((l.side==='home'||l.side==='over')?c:1-c)},1);
+  const bookDec=legs.reduce((a,l)=>a*decimal(l.price),1);const fairDec=1/pc;const userDec=S.parlayPrice?decimal(S.parlayPrice):bookDec;const ev=pc*userDec-1;const kk=kelly(pc,amFromDec(userDec));
+  let h='<h3>Parlay check</h3><div class="legs">';
+  for(const l of legs)h+='<div class="leg"><span>'+l.label+'</span><span class="num">'+l.price+'</span><button class="x" aria-label="Remove leg" data-rm="'+l.game_id+':'+l.type+'">×</button></div>';
+  h+='</div>';
+  for(const pt of parts)if(pt.legs.length>1)h+='<p>Same-game legs in '+pt.legs[0].label.split(':')[0]+': correlated probability '+pct(pt.pg)+', versus '+pct(pt.indep)+' if they were independent.</p>';
+  h+='<div class="stat"><span>Calibrated probability, all legs</span><span class="num">'+pct(pc)+'</span></div><div class="stat"><span>Model-implied, with same-game correlation</span><span class="num">'+pct(p)+'</span></div><div class="stat"><span>Fair odds at the calibrated probability</span><span class="num">'+amFromDec(fairDec)+'</span></div><div class="stat"><span>Book odds from leg prices</span><span class="num">'+amFromDec(bookDec)+'</span></div>';
+  h+='<div class="inrow" style="grid-template-columns:1fr 1fr"><div><label for="pp">Parlay price offered</label><input type="number" id="pp" value="'+S.parlayPrice+'" placeholder="'+amFromDec(bookDec)+'"></div><div><label for="bk">Bankroll</label><input type="number" inputmode="numeric" id="bk" value="'+S.bankroll+'"></div></div>';
+  h+='<div class="verdict '+(ev>0?'pos':'neg')+'">Expected return '+signedPct(ev)+' per dollar at '+amFromDec(userDec)+'. '+(ev>0?'Quarter-Kelly stake '+pct(kk)+', about $'+Math.round(kk*S.bankroll)+'.':'Negative expectation: skip it, or shop a better price.')+'</div>';
+  h+='<div class="btns"><button class="small" id="clear">Clear legs</button></div>';
+  el.innerHTML=h;
+  el.querySelectorAll('button[data-rm]').forEach(b=>b.onclick=()=>{const [gid,t]=b.dataset.rm.split(':');S.legs=S.legs.filter(l=>!(l.game_id===gid&&l.type===t));store.set('legs',S.legs);renderParlay()});
+  const keep=(id,fn)=>{const n=document.getElementById(id);n.oninput=()=>{fn(n.value);const pos=n.selectionStart;renderParlay();const m=document.getElementById(id);m.focus();try{m.setSelectionRange(pos,pos)}catch(e){}}};
+  keep('pp',v=>{S.parlayPrice=v;store.set('pp',v)});keep('bk',v=>{S.bankroll=Number(v)||0;store.set('bankroll',S.bankroll)});
+  document.getElementById('clear').onclick=()=>{S.legs=[];store.set('legs',S.legs);renderParlay()}}
+function renderSeason(){const el=document.getElementById('season');let h='<h3>Season simulation</h3><p>2,000 simulated seasons from the market\'s win probability for every remaining game (the model alone where no line is posted yet). Playoff odds use simplified seeding: four division winners plus the three best remaining records, ties broken at random.</p>';
+  for(const dv of [...new Set(DATA.sim.map(t=>t.div))].sort()){h+='<div class="divhead"><h3 style="margin:0">'+dv+'</h3></div><div class="tw"><table><tr><th>Team</th><th>Wins</th><th>Expected</th><th>Range</th><th>Division</th><th>Playoffs</th></tr>';
+    for(const t of DATA.sim.filter(x=>x.div===dv))h+='<tr><td>'+sw(t.team)+nm(t.team)+'</td><td class="num">'+t.record_now+'</td><td class="num">'+t.exp_wins.toFixed(1)+'</td><td class="num">'+t.p10+' to '+t.p90+'</td><td class="num">'+pct(t.p_div)+'</td><td class="num">'+pct(t.p_playoff)+'</td></tr>';h+='</table></div>'}
+  h+='<h3>Power ratings</h3><div class="tw"><table><tr><th>Team</th><th>Elo</th><th>Offense</th><th>Defense</th></tr>';
+  for(const r of [...DATA.ratings].sort((a,b)=>b.elo-a.elo))h+='<tr><td>'+sw(r.team)+nm(r.team)+'</td><td class="num">'+r.elo+'</td><td class="num">'+(r.off>=0?'+':'')+r.off.toFixed(3)+'</td><td class="num">'+(r.dfn>=0?'+':'')+r.dfn.toFixed(3)+'</td></tr>';
+  h+='</table></div><p class="muted">Offense and defense are EPA per play relative to league average; for defense, negative is good.</p>';el.innerHTML=h}
+function seasonRecord(){let sw_=0,sl=0,sp=0,ow=0,ol=0,op=0,pw=0,pl=0,mw=0,ml=0,fw=0,fl=0;for(const g of DATA.games){if(!g.final)continue;const m=g.home_score-g.away_score,t=g.home_score+g.away_score;
+  if(m!==0){if((g.p_pick_home>=0.5)===(m>0))pw++;else pl++;if((g.p_home>=0.5)===(m>0))mw++;else ml++;if(has(g.spread_market)&&g.spread_market!==0){if((g.spread_market>0)===(m>0))fw++;else fl++}}
+  if(has(g.spread_market)&&Math.abs(g.spread_model-g.spread_market)>=0.5){if(m===g.spread_market)sp++;else if((g.spread_model>g.spread_market)===(m>g.spread_market))sw_++;else sl++}
+  if(has(g.total_market)&&Math.abs(g.total_model-g.total_market)>=0.5){if(t===g.total_market)op++;else if((g.total_model>g.total_market)===(t>g.total_market))ow++;else ol++}}
+  return{sw:sw_,sl,sp,ow,ol,op,pw,pl,mw,ml,fw,fl}}
+function wl(w,l,p){return w+'-'+l+(p?'-'+p:'')+(w+l?' ('+pct(w/(w+l))+')':'')}
+function gaChart(rows){const W=340,rowH=26,top=26,H=top+rows.length*rowH+30,x0=140,x1=W-12,lo=0.45,hi=0.62;const X=v=>x0+(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*(x1-x0);
+  let s='<svg class="chart" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Accuracy on searched seasons versus unseen seasons, real and coin-flip outcomes">';
+  for(const v of [0.45,0.5,0.55,0.6]){s+='<line x1="'+X(v).toFixed(1)+'" y1="'+(top-6)+'" x2="'+X(v).toFixed(1)+'" y2="'+(H-24)+'" stroke="var(--rule)"/><text x="'+X(v).toFixed(1)+'" y="'+(H-10)+'" font-size="10" text-anchor="middle" fill="var(--ink2)">'+Math.round(v*100)+'%</text>'}
+  s+='<line x1="'+X(0.5238).toFixed(1)+'" y1="'+(top-10)+'" x2="'+X(0.5238).toFixed(1)+'" y2="'+(H-24)+'" stroke="var(--maroon)" stroke-dasharray="3 2"/><text x="'+(X(0.5238)+3).toFixed(1)+'" y="'+(top-12)+'" font-size="10" fill="var(--maroon)">break-even 52.4%</text>';
+  rows.forEach((r,i)=>{const y=top+i*rowH+rowH/2;const c=r.null?'var(--amber)':'var(--ink)';
+    s+='<text x="0" y="'+(y+4)+'" font-size="11" fill="var(--ink)">'+r.label+'</text>';
+    s+='<line x1="'+X(r.a).toFixed(1)+'" y1="'+y+'" x2="'+X(r.b).toFixed(1)+'" y2="'+y+'" stroke="'+c+'" stroke-width="1.5"/>';
+    s+='<circle cx="'+X(r.a).toFixed(1)+'" cy="'+y+'" r="4.5" fill="var(--paper)" stroke="'+c+'" stroke-width="1.5"/><circle cx="'+X(r.b).toFixed(1)+'" cy="'+y+'" r="4.5" fill="'+c+'"/>'});
+  return s+'</svg>'}
+function renderRecord(){const el=document.getElementById('record');const bt=DATA.backtest,o=bt.overall,P=bt.periods;const sr=seasonRecord();
+  let h='<h3>This season</h3><div class="stat"><span>Winner picks (market favorite)</span><span class="num">'+wl(sr.pw,sr.pl)+'</span></div><div class="stat"><span>Winners, model alone</span><span class="num">'+wl(sr.mw,sr.ml)+'</span></div>'+
+    (()=>{const sl=DATA.picks.filter(p=>p.reason==='strong lean'&&p.status==='graded');const W=sl.filter(p=>p.result==='W').length,L=sl.filter(p=>p.result==='L').length,Pu=sl.filter(p=>p.result==='P').length;
+      const c=sl.filter(p=>p.clv!=='').map(p=>Number(p.clv));const clv=c.length?c.reduce((a,b)=>a+b,0)/c.length:null;
+      return '<div class="stat"><span>Strong spread leans, logged before kickoff</span><span class="num">'+(sl.length?wl(W,L,Pu)+(clv===null?'':', CLV '+signed(clv)):'none graded yet')+'</span></div>'})()+
+    '<div class="stat"><span>Spreads, model side vs the line</span><span class="num">'+wl(sr.sw,sr.sl,sr.sp)+'</span></div><div class="stat"><span>Totals, model side vs the line</span><span class="num">'+wl(sr.ow,sr.ol,sr.op)+'</span></div><div class="stat"><span>Needed against the line at -110</span><span class="num">52.4%</span></div>'+
+    '<p class="muted note">Graded automatically from final scores; spreads and totals count every game where the model sat at least half a point from the line. A few weeks of games is noise; the tables below are the evidence.</p>';
+  const roles={'2010-2015':'backtest','2016-2020':'validation','2021-2025':'locked test','2026':'live'};
+  h+='<h3>Picking winners</h3><p>Every season below was predicted by models fitted only on earlier seasons. 2016–20 was used to choose between versions; 2021–25 was held back and scored once, after every choice was made.</p><div class="tw"><table><tr><th>Seasons</th><th>Favorite<span class="role">the pick</span></th><th>Model alone</th><th>Previous model</th></tr>';
+  for(const k of ['2010-2015','2016-2020','2021-2025','2026']){const b=P[k];if(!b)continue;h+='<tr'+(k==='2021-2025'?' class="hi"':'')+'><td class="num">'+k.replace('-','–')+'<span class="role">'+roles[k]+', '+b.su_market[1]+' games</span></td><td class="num">'+pct(rate(b.su_market))+'</td><td class="num">'+pct(rate(b.su_model))+'</td><td class="num">'+pct(rate(b.su_old))+'</td></tr>'}
+  h+='</table></div><p class="muted note">A logistic model combining the line with the ratings picked the same winners 94% of the time and its probabilities were less accurate than the market\'s own, so the card uses the market. The model alone improved on the previous version and finished just under 65% on the locked test.</p>';
+  const f2=x=>Number(x).toFixed(2);
+  h+='<h3>Spreads and totals, held-out seasons</h3><div class="tw"><table><tr><th>Seasons</th><th>Spread miss<span class="role">model, line</span></th><th>Total miss<span class="role">model, line</span></th><th>Side<span class="role">2+ pts</span></th><th>Total<span class="role">2+ pts</span></th></tr>';
+  for(const k of ['2010-2015','2016-2020','2021-2025','2026']){const b=P[k];if(!b)continue;h+='<tr'+(k==='2021-2025'?' class="hi"':'')+'><td class="num">'+k.replace('-','–')+'</td><td class="num">'+f2(b.mae_model)+', '+f2(b.mae_close)+'</td><td class="num">'+f2(b.mae_total_model)+', '+f2(b.mae_total_close)+'</td><td class="num">'+b.ats[2][0]+'-'+b.ats[2][1]+'</td><td class="num">'+b.ou[2][0]+'-'+b.ou[2][1]+'</td></tr>'}
+  h+='</table></div><p class="muted note">Misses are average errors in points. The closing line misses by less than the model in every period, so disagreements with it have not been profitable: each point of spread disagreement has been worth '+signedPct(DATA.calib.spread[1]/4)+' of cover rate, each point on totals '+signedPct(DATA.calib.total[1]/4)+'.</p>';
+  h+='<h3>The genetic search</h3><p>Two evolutionary searches looked for better formulas: one evolved free-form formula trees (genetic programming, about 50,000 to 80,000 candidates per run), the other evolved which inputs a model should use. Each was scored only on 2002–15 and then checked on 2016–20, which it never saw. To see how much of a search\'s success is luck, the same searches were also run on outcomes shuffled like coin flips.</p>';
+  const lab={ats:'Spreads',ou:'Totals'};
+  const cr=DATA.ga.filter(r=>(r.task==='ats'||r.task==='ou')&&has(r.train_oof)).sort((a,b)=>(a.task>b.task?1:(a.task<b.task?-1:0))||(a.null?1:0)-(b.null?1:0)||(a.run>b.run?1:-1))
+    .map(r=>({label:lab[r.task]+(r.null?', coin flips':', real'),a:r.train_oof,b:r.val_of_train_best,null:r.null}));
+  const seen={};for(const r of cr){seen[r.label]=(seen[r.label]||0)+1;r.label+=' #'+seen[r.label]}
+  if(cr.length){h+='<div class="legend"><span><i style="border:1.5px solid var(--ink);background:var(--paper)"></i>seasons searched</span><span><i style="background:var(--ink)"></i>unseen seasons</span><span><i style="background:var(--amber)"></i>coin-flip outcomes</span></div>'+gaChart(cr)+
+    '<p class="muted note">Against the line, the searches looked like 56–58% winners on the seasons they searched and fell to 47–52% on seasons they had not seen, the same drop they showed on coin flips. What they found was noise.</p>'}
+  const R=DATA.ga_ref||{};const name={su_ind:'Winners, model alone',su_mkt:'Winners, with the line',ats:'Spreads',ou:'Totals',margin:'Spread in points',total:'Total in points'};
+  h+='<div class="tw"><table><tr><th>Search</th><th>Seasons searched</th><th>Same formula, unseen</th><th>Plain model, unseen</th></tr>';
+  for(const task of ['su_ind','su_mkt','ats','ou','margin','total']){const rs=DATA.ga.filter(r=>r.task===task);if(!rs.length)continue;h+='<tr class="grp"><td colspan="4">'+name[task]+'</td></tr>';
+    for(const r of rs.sort((a,b)=>(a.null?1:0)-(b.null?1:0))){const reg=task==='margin'||task==='total';
+      const a=reg?(has(r.train_oof_mae)?fmt1(r.train_oof_mae)+' pts':'—'):pct(r.train_oof),b=reg?(has(r.val_mae_train_best)?fmt1(r.val_mae_train_best)+' pts':'—'):pct(r.val_of_train_best),c=reg?(has(R[task])?fmt1(R[task])+' pts':'—'):(has(R[task])?pct(R[task]):'—');
+      h+='<tr><td>'+(r.engine==='formula GP'?'Formula trees':'Input selection')+(r.null?'<span class="role">coin-flip outcomes</span>':'')+'</td><td class="num">'+a+'</td><td class="num">'+b+'</td><td class="num">'+(r.null?'—':c)+'</td></tr>'}}
+  h+='</table></div><p class="muted note">Winner rows are accuracy; spread and total rows are average error in points, lower is better. In every row the evolved formula did no better on unseen seasons than the plain regularized model, so the card uses the plain model.</p>';
+  h+='<h3>Logged picks</h3>';const graded=DATA.picks.filter(p=>p.status==='graded');const open=DATA.picks.filter(p=>p.status==='open');
+  if(!DATA.picks.length)h+='<p class="empty">Nothing logged yet. Every strong spread lean ('+DATA.strong_lean+'+ points off the line) is logged before kickoff as a paper pick, along with anything whose calibrated edge reaches '+pct(DATA.edge_min)+'. Later builds grade them for result and closing line value.</p>';
+  else{const W=graded.filter(p=>p.result==='W').length,Lo=graded.filter(p=>p.result==='L').length,Pu=graded.filter(p=>p.result==='P').length;const clvs=graded.filter(p=>p.clv!=='').map(p=>Number(p.clv)).filter(x=>!isNaN(x));const clv=clvs.length?clvs.reduce((a,b)=>a+b,0)/clvs.length:null;
+    h+='<div class="stat"><span>Graded record</span><span class="num">'+wl(W,Lo,Pu)+'</span></div><div class="stat"><span>Average closing line value</span><span class="num">'+(clv===null?'—':signed(clv)+' pts')+'</span></div><div class="stat"><span>Open picks</span><span class="num">'+open.length+'</span></div>';
+    h+='<div class="tw"><table><tr><th>Wk</th><th>Pick</th><th>Line</th><th>Model</th><th>Result</th><th>CLV</th></tr>';
+    for(const p of [...DATA.picks].reverse().slice(0,80))h+='<tr><td class="num">'+p.week+'</td><td>'+(p.type==='spread'?p.side+' ('+p.away+' at '+p.home+')':p.side+' '+p.away+' at '+p.home)+(p.reason==='strong lean'?'<span class="role">strong lean</span>':'')+'</td><td class="num">'+p.line_at_pick+'</td><td class="num">'+pct(Number(p.model_prob))+'</td><td>'+(p.result||'open')+'</td><td class="num">'+(p.clv===''?'':signed(Number(p.clv)))+'</td></tr>';h+='</table></div>'}
+  h+='<h3>By season</h3><div class="tw"><table><tr><th>Season</th><th>Winners</th><th>Spread error</th><th>Line error</th><th>Side 2+</th><th>Total 2+</th></tr>';
+  for(const s of Object.keys(bt.by_season).sort()){const b=bt.by_season[s];h+='<tr'+(Number(s)>=2021?' class="hi"':'')+'><td class="num">'+s+'</td><td class="num">'+pct(rate(b.su_market))+'</td><td class="num">'+Number(b.mae_model).toFixed(2)+'</td><td class="num">'+Number(b.mae_close).toFixed(2)+'</td><td class="num">'+b.ats[2][0]+'-'+b.ats[2][1]+'</td><td class="num">'+b.ou[2][0]+'-'+b.ou[2][1]+'</td></tr>'}
+  h+='</table></div><p class="muted note">Winners is the favorite, which is the card\'s pick. Highlighted seasons are the locked test.</p>';el.innerHTML=h}
+function renderMethod(){const el=document.getElementById('method');const P=DATA.params;const M=DATA.model;el.innerHTML='<h3>How the numbers are made</h3>'+
+  '<p>Every game gets about '+M.n_features+' inputs, each measured before kickoff: Elo ratings and a quarterback adjustment, efficiency (expected points per play for passing and rushing, first-down and explosive-play rates, completion percentage over expected), recent results at three time scales, turnovers and how much of a team\'s margin came from turnover and kicking luck, pass rush and protection, special teams and penalties, quarterback and coaching experience, and schedule, rest, travel and venue.</p>'+
+  '<p>Three models read those inputs. Spread and total are regularized linear models fitted on '+M.fit_seasons[0]+'–'+M.fit_seasons[1]+'. The winner model is a regularized logistic model on the same inputs. The winner pick you see is the betting market\'s favorite, with its win probability after removing the book\'s cut: on held-out seasons that was the most accurate winner forecast available, ahead of the model and of the model combined with the line. The fair price is the moneyline that breaks even at that probability. Where no line is posted yet, the pick and fair price come from the model alone.</p>'+
+  '<p><b>New this version.</b> Injuries: each player on the final injury report is weighted by his chance of missing the game and his share of snaps over the last four games, summed by position group. Play-by-play: success rate, early-down EPA, EPA in competitive game states, third-down and red-zone results, pass rate over expected, and special-teams EPA. Weather: game-time wind and temperature for outdoor games, from a forecast when the card is built. On held-out 2021–25 games these moved the model alone from 64.4% to 64.6% on winners and trimmed the average spread miss by 0.03 points and the total miss by 0.04. The line still misses by less.</p>'+
+  '<p><b>Elo and quarterbacks.</b> Elo with margin of victory and regression to the mean each offseason, home field about '+fmt1(P.HFA/25)+' points. Every quarterback game gets a value from completions, yards, touchdowns, interceptions, sacks and rushing; when the listed starter differs from what a team has been getting, the difference moves the line at '+P.QB_MULT+' Elo points per value point.</p>'+
+  '<p><b>Probabilities</b> for covering and going over come from the distribution of the model\'s own out-of-sample errors ('+DATA.residuals.margin.length+' games), which is what the charts in each game show, so the pile-ups at 3 and 7 are represented and push probability is real. <b>Calibration</b> then asks how often games with the same size of disagreement with the line actually covered; edges, stakes and the pick log use that calibrated number.</p>'+
+  '<p><b>Prices at your books.</b> With an odds key, each build reads prices from up to 17 sportsbooks. Fair is Pinnacle\'s price, the usual benchmark because its margins are thin and it takes sharp bettors, with its cut removed; moneylines use the power method, which leaves longshots their historical win rates. A spread or total at another number is priced through the chance of every exact margin and total around the market\'s number, fitted on 2015–25 games: margins of 3 land about three times as often as a smooth curve says and 7 about twice, so a half point off 3 is worth about 18 cents and off 7 about 11. The Bets tab grades logged bets from final scores and prices each at the closing line the same way.</p>'+
+  '<p><b>How it was tested.</b> Choices were made on 2002–20 only. 2021–25 was scored once at the end, with each season predicted by models refitted on the seasons before it. The Record tab shows those results, including the genetic search and its coin-flip control.</p>'+
+  '<h3>What it is not</h3><p>It is not an edge against the line. The closing line predicts margins and totals better than the model in every period tested, and betting the model\'s side has landed near 50%. For picking winners, the line does most of the work; the model on its own is a strong team ranking, and the Record tab keeps score on both.</p>'+
+  '<p class="muted">Built '+DATA.built+'. Model fitted '+M.built+'. Rating constants: '+Object.entries(P).map(([k,v])=>k+'='+v).join(', ')+'.</p>'}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('main section').forEach(s=>s.classList.toggle('on',s.id==='tab-'+b.dataset.tab));try{window.scrollTo(0,0)}catch(e){}});
+document.getElementById('subtitle').textContent=DATA.season+' season\nbuilt '+DATA.built;
+renderWeeks();renderCard();renderParlay();renderSeason();renderRecord();renderMethod();
+setupBetDialog();setupImport();renderBets();gradeStored();Bets.init();
+</script>
+</body>
+</html>
