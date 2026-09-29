@@ -1,1 +1,5 @@
 logged,season,week,game_id,away,home,type,side,line_at_pick,model_prob,edge,status,result,close_line,clv,reason
+2026-09-29,2026,4,2026_04_ARI_NYG,ARI,NYG,spread,NYG,-1.0,0.513,-0.011,open,,,,strong lean
+2026-09-29,2026,4,2026_04_NYJ_CHI,NYJ,CHI,spread,CHI,3.0,0.512,-0.012,open,,,,strong lean
+2026-09-29,2026,4,2026_04_LAC_SEA,LAC,SEA,spread,SEA,6.5,0.51,-0.014,open,,,,strong lean
+2026-09-29,2026,4,2026_04_ATL_NO,ATL,NO,total,under,48.5,0.538,0.014,open,,,,edge
