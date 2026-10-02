@@ -3,3 +3,4 @@ logged,season,week,game_id,away,home,type,side,line_at_pick,model_prob,edge,stat
 2026-09-29,2026,4,2026_04_NYJ_CHI,NYJ,CHI,spread,CHI,3.0,0.512,-0.012,open,,,,strong lean
 2026-09-29,2026,4,2026_04_LAC_SEA,LAC,SEA,spread,SEA,6.5,0.51,-0.014,open,,,,strong lean
 2026-09-29,2026,4,2026_04_ATL_NO,ATL,NO,total,under,48.5,0.538,0.014,open,,,,edge
+2026-10-02,2026,4,2026_04_NE_BUF,NE,BUF,total,under,49.5,0.534,0.01,open,,,,edge
