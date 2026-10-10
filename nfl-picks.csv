@@ -5,3 +5,4 @@ logged,season,week,game_id,away,home,type,side,line_at_pick,model_prob,edge,stat
 2026-09-29,2026,4,2026_04_ATL_NO,ATL,NO,total,under,48.5,0.538,0.014,graded,L,47.5,1.0,edge
 2026-10-02,2026,4,2026_04_NE_BUF,NE,BUF,total,under,49.5,0.534,0.01,graded,L,49.5,0.0,edge
 2026-10-06,2026,5,2026_05_BAL_ATL,BAL,ATL,spread,BAL,3.0,0.535,0.011,open,,,,edge
+2026-10-10,2026,5,2026_05_NYG_WAS,NYG,WAS,spread,NYG,3.5,0.531,0.007,open,,,,strong lean
