@@ -8,7 +8,10 @@ logged,season,week,game_id,away,home,type,side,line_at_pick,model_prob,edge,stat
 2026-10-10,2026,5,2026_05_NYG_WAS,NYG,WAS,spread,NYG,3.5,0.531,0.007,graded,W,3.5,0.0,strong lean
 2026-10-13,2026,6,2026_06_CHI_ATL,CHI,ATL,spread,ATL,-3.0,0.513,-0.011,graded,L,-1.5,1.5,strong lean
 2026-10-13,2026,6,2026_06_DAL_GB,DAL,GB,total,under,53.0,0.535,0.011,graded,W,53.5,-0.5,edge
-2026-10-15,2026,6,2026_06_WAS_SF,WAS,SF,total,under,51.5,0.539,0.016,open,,,,edge
+2026-10-15,2026,6,2026_06_WAS_SF,WAS,SF,total,under,51.5,0.539,0.016,graded,W,51.5,0.0,edge
 2026-10-15,2026,6,2026_06_CHI_ATL,CHI,ATL,total,under,51.5,0.535,0.011,graded,L,51.5,0.0,edge
 2026-10-16,2026,6,2026_06_BAL_CLE,BAL,CLE,spread,BAL,-3.5,0.531,0.007,graded,L,-3.0,-0.5,strong lean
-2026-10-18,2026,6,2026_06_WAS_SF,WAS,SF,spread,SF,7.5,0.51,-0.014,open,,,,strong lean
+2026-10-18,2026,6,2026_06_WAS_SF,WAS,SF,spread,SF,7.5,0.51,-0.014,graded,L,7.5,0.0,strong lean
+2026-10-20,2026,7,2026_07_MIA_NYJ,MIA,NYJ,spread,MIA,5.5,0.534,0.011,open,,,,edge
+2026-10-20,2026,7,2026_07_NYG_HOU,NYG,HOU,spread,NYG,10.0,0.53,0.006,open,,,,strong lean
+2026-10-20,2026,7,2026_07_DAL_PHI,DAL,PHI,spread,PHI,-4.5,0.512,-0.012,open,,,,strong lean
