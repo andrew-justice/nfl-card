@@ -18,3 +18,4 @@ logged,season,week,game_id,away,home,type,side,line_at_pick,model_prob,edge,stat
 2026-10-24,2026,7,2026_07_IND_MIN,IND,MIN,spread,MIN,6.5,0.512,-0.012,graded,L,6.5,0.0,strong lean
 2026-10-24,2026,7,2026_07_TB_CAR,TB,CAR,spread,CAR,2.5,0.512,-0.012,graded,L,3.0,0.5,strong lean
 2026-10-27,2026,8,2026_08_LV_NYJ,LV,NYJ,spread,NYJ,-1.0,0.513,-0.011,open,,,,strong lean
+2026-10-30,2026,8,2026_08_PHI_WAS,PHI,WAS,spread,PHI,6.0,0.53,0.007,open,,,,strong lean
