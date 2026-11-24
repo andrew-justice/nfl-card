@@ -29,4 +29,10 @@ logged,season,week,game_id,away,home,type,side,line_at_pick,model_prob,edge,stat
 2026-11-17,2026,11,2026_11_IND_HOU,IND,HOU,spread,IND,13.0,0.537,0.013,graded,L,12.5,0.5,edge
 2026-11-17,2026,11,2026_11_MIN_SF,MIN,SF,total,under,47.0,0.536,0.012,graded,W,44.5,2.5,edge
 2026-11-21,2026,11,2026_11_MIN_SF,MIN,SF,spread,SF,3.0,0.514,-0.009,graded,W,4.5,1.5,strong lean
-2026-11-22,2026,11,2026_11_CIN_WAS,CIN,WAS,total,under,55.0,0.535,0.012,open,,,,edge
+2026-11-22,2026,11,2026_11_CIN_WAS,CIN,WAS,total,under,55.0,0.535,0.012,graded,W,54.5,0.5,edge
+2026-11-24,2026,12,2026_12_GB_LA,GB,LA,spread,LA,2.5,0.522,-0.001,open,,,,strong lean
+2026-11-24,2026,12,2026_12_CHI_DET,CHI,DET,spread,DET,-2.5,0.516,-0.007,open,,,,strong lean
+2026-11-24,2026,12,2026_12_CHI_DET,CHI,DET,total,under,55.5,0.54,0.016,open,,,,edge
+2026-11-24,2026,12,2026_12_NYG_IND,NYG,IND,spread,IND,-6.5,0.522,-0.002,open,,,,strong lean
+2026-11-24,2026,12,2026_12_NE_LAC,NE,LAC,spread,NE,1.0,0.548,0.024,open,,,,edge
+2026-11-24,2026,12,2026_12_NE_LAC,NE,LAC,total,over,35.5,0.55,0.026,open,,,,edge
